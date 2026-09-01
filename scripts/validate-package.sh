@@ -10,6 +10,8 @@ bash -n "$ROOT/install.sh" "$ROOT/bin/ai-skills" "$ROOT/scripts/install-ui-skill
 # Canonical agent set: compare names, not a magic numeric count.
 EXPECTED_AGENTS="$(cat <<'EOF'
 ai-skills-orchestrator
+document-workspace-designer
+kafedra-workspace-orchestrator
 meteo-workstation-designer
 motion-interaction-reviewer
 project-integration-architect
@@ -84,6 +86,43 @@ for f in \
   grep -q 'Recomposition' "$f" || fail "$f lacks recomposition contract"
 done
 
+# Kafedra/document-workspace profile must remain complete and discoverable.
+for f in \
+  "$ROOT/profiles/kafedra-planner/README.md" \
+  "$ROOT/profiles/kafedra-planner/ROUTING.md" \
+  "$ROOT/profiles/kafedra-planner/REFERENCE_FLOWS.md" \
+  "$ROOT/profiles/kafedra-planner/PATTERNS_AND_ANTIPATTERNS.md" \
+  "$ROOT/profiles/kafedra-planner/ANTI_PATTERN_FLOW.md"; do
+  [[ -f "$f" ]] || fail "Kafedra profile file missing: $f"
+done
+for skill in \
+  kafedra-workspace-orchestrator \
+  kafedra-document-workspace \
+  kafedra-document-intake \
+  kafedra-provenance-and-inspector \
+  kafedra-action-recomposition \
+  kafedra-review-by-exception \
+  kafedra-search-and-navigation \
+  kafedra-responsive-inspector \
+  kafedra-motion-continuity \
+  kafedra-states-and-recovery \
+  kafedra-adaptive-controls \
+  kafedra-plan-calendar-continuity \
+  kafedra-template-and-structured-document-flow \
+  kafedra-ux-acceptance; do
+  [[ -f "$ROOT/.agents/skills/$skill/SKILL.md" ]] || fail "Kafedra skill missing: $skill"
+  grep -Eq 'Anti-pattern|Антипаттерн|Anti-patterns' "$ROOT/.agents/skills/$skill/SKILL.md" || fail "$skill lacks anti-pattern contract"
+done
+grep -q 'Kafedra Planner / document workspace' "$ROOT/.agents/skills/ui-skill-router/SKILL.md" || fail "UI router lacks Kafedra route"
+grep -q 'kafedra-workspace-orchestrator' "$ROOT/.agents/skills/skill-agent-orchestrator/SKILL.md" || fail "global orchestrator lacks Kafedra domain route"
+grep -q 'kafedra-workspace-orchestrator' "$ROOT/integrations/shared/global-orchestration.md" || fail "global routing block lacks Kafedra domain route"
+grep -qi 'review by exception' "$ROOT/.agents/skills/kafedra-document-intake/SKILL.md" || fail "Kafedra intake lacks exception-only review contract"
+grep -q 'never-learn' "$ROOT/.agents/skills/kafedra-adaptive-controls/SKILL.md" || fail "Kafedra adaptive skill lacks safety classes"
+grep -q 'prefers-reduced-motion' "$ROOT/.agents/skills/kafedra-motion-continuity/SKILL.md" || fail "Kafedra motion lacks reduced-motion contract"
+grep -q 'kafedra-plan-calendar-continuity' "$ROOT/profiles/kafedra-planner/ROUTING.md" || fail "Kafedra routing lacks plan/calendar continuity route"
+grep -q 'kafedra-template-and-structured-document-flow' "$ROOT/profiles/kafedra-planner/ROUTING.md" || fail "Kafedra routing lacks template flow route"
+grep -qi 'partial' "$ROOT/.agents/skills/kafedra-ux-acceptance/SKILL.md" || fail "Kafedra acceptance lacks partial-success evidence"
+
 sandbox="$(mktemp -d)"
 trap 'rm -rf "$sandbox"' EXIT
 export HOME="$sandbox/home"
@@ -95,12 +134,12 @@ mkdir -p "$HOME"
 [[ "$(grep -c 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md")" -eq 1 ]] || fail "global Codex block duplicated"
 "$ROOT/bin/ai-skills" doctor
 
-for skill in skill-agent-orchestrator anti-slop-ui-direction dense-controls-and-selection existing-project-integration; do
+for skill in skill-agent-orchestrator anti-slop-ui-direction dense-controls-and-selection existing-project-integration kafedra-workspace-orchestrator kafedra-document-intake kafedra-ux-acceptance; do
   [[ -L "$HOME/.agents/skills/$skill" ]] || fail "Codex global skill missing: $skill"
   [[ -L "$HOME/.claude/skills/$skill" ]] || fail "Claude global skill missing: $skill"
   [[ -L "$HOME/.gemini/config/skills/$skill" ]] || fail "Antigravity global skill missing: $skill"
 done
-for agent in ai-skills-orchestrator ui-methodology-director ui-ux-auditor project-integration-architect; do
+for agent in ai-skills-orchestrator document-workspace-designer kafedra-workspace-orchestrator ui-methodology-director ui-ux-auditor project-integration-architect; do
   [[ -L "$HOME/.codex/agents/$agent.toml" ]] || fail "Codex global agent missing: $agent"
   [[ -L "$HOME/.claude/agents/$agent.md" ]] || fail "Claude global agent missing: $agent"
   [[ -f "$HOME/.gemini/config/agents/$agent/agent.md" ]] || fail "Antigravity global agent missing: $agent"
@@ -109,6 +148,8 @@ done
 grep -q 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md" || fail "Codex managed global block missing"
 grep -q 'ai-agents-skills:begin' "$HOME/.claude/CLAUDE.md" || fail "Claude managed global block missing"
 grep -q 'ai-agents-skills:begin' "$HOME/.gemini/GEMINI.md" || fail "Antigravity managed global block missing"
+grep -q 'kafedra-workspace-orchestrator' "$HOME/.codex/AGENTS.md" || fail "Codex global block lacks Kafedra route"
+grep -q 'document-workspace-designer' "$HOME/.claude/CLAUDE.md" || fail "Claude global block lacks document specialist route"
 
 # --plan is genuinely read-only.
 plan_project="$sandbox/plan-project"
@@ -154,17 +195,22 @@ grep -q 'Project-local rules win' "$project/.ai-agents-skills/INTEGRATION_PROMPT
 grep -q 'nested/AGENTS.md' "$project/.ai-agents-skills/PROJECT_INVENTORY.md" || fail "inventory missed nested AGENTS.md"
 grep -q 'anti-slop-ui-direction' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks live library catalog"
 grep -q 'dense-controls-and-selection' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks recomposition skill metadata"
+grep -q 'kafedra-workspace-orchestrator' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks Kafedra profile metadata"
 
 # Only integration architect is staged automatically; semantic roles are selected later.
 [[ -f "$project/.claude/agents/project-integration-architect.md" ]] || fail "Claude integration architect missing"
 [[ -f "$project/.agents/agents/project-integration-architect/agent.md" ]] || fail "Antigravity integration architect missing"
 [[ ! -e "$project/.codex/agents/ui-methodology-director.toml" ]] || fail "integrate staged unrelated library agents before role analysis"
 [[ ! -e "$project/.claude/agents/ui-ux-auditor.md" ]] || fail "integrate staged unrelated library agents before role analysis"
+[[ ! -e "$project/.codex/agents/kafedra-workspace-orchestrator.toml" ]] || fail "integrate staged Kafedra agent before role analysis"
+[[ ! -e "$project/.claude/agents/document-workspace-designer.md" ]] || fail "integrate staged document agent before role analysis"
 
 # Vendor mode adds only non-conflicting package-managed skills.
 [[ -f "$project/.agents/skills/skill-agent-orchestrator/SKILL.md" ]] || fail "vendored shared skill missing"
 [[ -f "$project/.agents/skills/anti-slop-ui-direction/SKILL.md" ]] || fail "vendored anti-slop skill missing"
 [[ -f "$project/.agents/skills/dense-controls-and-selection/SKILL.md" ]] || fail "vendored recomposition skill missing"
+[[ -f "$project/.agents/skills/kafedra-workspace-orchestrator/SKILL.md" ]] || fail "vendored Kafedra orchestrator skill missing"
+[[ -f "$project/.agents/skills/kafedra-document-workspace/SKILL.md" ]] || fail "vendored Kafedra document workspace skill missing"
 [[ -f "$project/.claude/skills/skill-agent-orchestrator/SKILL.md" ]] || fail "vendored Claude skill missing"
 [[ -f "$project/.agents/skills/skill-agent-orchestrator/.ai-agents-skills-managed" ]] || fail "vendored skill missing managed marker"
 
@@ -172,6 +218,7 @@ grep -q 'dense-controls-and-selection' "$project/.ai-agents-skills/INTEGRATION_P
 grep -q 'Existing Project Integration Prompt' "$sandbox/prompt.txt" || fail "prompt command missing template"
 grep -q 'Existing instruction/design files' "$sandbox/prompt.txt" || fail "prompt command missing live inventory"
 grep -q 'Project Integration Architect' "$sandbox/prompt.txt" || fail "prompt missing semantic role"
+grep -q 'kafedra-document-intake' "$sandbox/prompt.txt" || fail "prompt lacks Kafedra document skill metadata"
 
 # Repeated integration remains non-destructive and idempotent.
 "$ROOT/bin/ai-skills" integrate "$project" --vendor
@@ -180,4 +227,4 @@ cmp "$sandbox/DESIGN.before" "$project/DESIGN.md" || fail "repeat integrate chan
 cmp "$sandbox/local-skill.before" "$project/.agents/skills/existing-project-integration/SKILL.md" || fail "repeat integrate overwrote local skill"
 cmp "$sandbox/local-agent.before" "$project/.codex/agents/project-integration-architect.toml" || fail "repeat integrate overwrote local agent"
 
-echo "Validated canonical agent parity, interaction recomposition, project-first integration and platform registrations"
+echo "Validated canonical agent parity, Interaction Recomposition, Kafedra document profile, project-first integration and platform registrations"

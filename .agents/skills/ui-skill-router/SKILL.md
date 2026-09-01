@@ -1,11 +1,11 @@
 ---
 name: ui-skill-router
-description: Canonical focused-UI router for audit, control recomposition, Qt, meteorology, motion, gesture, workflow and anti-slop concept tasks; selects the smallest useful local skill set.
+description: Canonical focused-UI router for audit, control recomposition, document workspaces, Qt, meteorology, motion, gesture, workflow and anti-slop concept tasks; selects the smallest useful local skill set.
 ---
 
 # UI Skill Router
 
-This is the canonical router for **focused UI work**. Do not load every UI skill. Classify the user goal, surface, stack and scale of redesign first.
+This is the canonical router for **focused UI work**. Do not load every UI skill. Classify the user goal, surface, stack, domain and scale of redesign first.
 
 `skill-agent-orchestrator` handles multi-area delegation and synthesis; it should defer focused UI skill selection here instead of duplicating this routing table.
 
@@ -46,7 +46,31 @@ Add:
 - `states-errors-and-recovery` if control changes load data asynchronously;
 - domain skills when domain semantics constrain merging.
 
-Run `ui-audit-and-acceptance` after implementation.
+For Kafedra/document work add `kafedra-action-recomposition` rather than applying generic control reduction without domain completion/source semantics.
+
+Run `ui-audit-and-acceptance` or the domain-specific acceptance skill after implementation.
+
+### Kafedra Planner / document workspace
+
+For document-centric Kafedra work, select only the affected skills:
+
+- `kafedra-document-workspace` — list/master-detail/attention organization;
+- `kafedra-document-intake` — upload/import/materialization;
+- `kafedra-provenance-and-inspector` — source/evidence/history/detail;
+- `kafedra-action-recomposition` — control cluster/domain-action simplification;
+- `kafedra-review-by-exception` — unresolved ambiguity queues;
+- `kafedra-search-and-navigation` — search/facets/linked navigation;
+- `kafedra-responsive-inspector` — desktop/mobile mapping;
+- `kafedra-motion-continuity` — document/list/inspector motion decision;
+- `kafedra-states-and-recovery` — async/partial/offline/retry;
+- `kafedra-adaptive-controls` — stable learned/default behavior;
+- `kafedra-plan-calendar-continuity` — plan/source/task/calendar/plan-fact relationships;
+- `kafedra-template-and-structured-document-flow` — versioned template/mapping/generation flow;
+- `kafedra-ux-acceptance` — implemented-result audit.
+
+For a multi-surface Kafedra task, route through `kafedra-workspace-orchestrator`. Inside the actual `kafedra-planner` repository, local project rules/skills remain authoritative over this reusable profile.
+
+Do not load meteorological skills for document work.
 
 ### New or redesigned Qt/C++ interface with settled concept
 
@@ -78,12 +102,16 @@ Use:
 - `gesture-and-direct-manipulation`
 - `interaction-contracts-and-flow`
 
+For Kafedra/document surfaces add `kafedra-motion-continuity` so motion preserves document/list/inspector semantics and reduced-motion behavior.
+
 ### Complex import/setup wizard
 
 Use:
 - `workflow-and-progressive-disclosure`
 - `states-errors-and-recovery`
 - `interaction-contracts-and-flow`
+
+For Kafedra document intake, first test whether the wizard is unnecessary: `kafedra-document-intake` defaults to safe automatic materialization plus review by exception. Use a staged wizard only when the user must make genuinely independent decisions that cannot be safely derived.
 
 Do not use the workflow skill just to hide ordinary secondary controls in a popover/inspector; hierarchy/recomposition owns that case.
 
@@ -95,15 +123,17 @@ Do not use the workflow skill just to hide ordinary secondary controls in a popo
 4. Do not merge semantically independent axes solely to reduce widget count.
 5. For substantial primary-surface redesign, do not start implementation before the concept gate passes.
 6. Standard platform controls do not need anti-slop novelty.
-7. Mobile-style gestures cannot be the only path for core desktop Qt actions.
+7. Mobile-style gestures cannot be the only path for core desktop actions.
 8. If data changes asynchronously, include state/recovery behavior.
-9. Finish material implementation work with `ui-audit-and-acceptance`.
+9. A domain profile cannot bypass project-local authority in an established repository.
+10. Finish material implementation work with generic or domain-specific acceptance.
 
 ## Routing output
 
 Before material UI work, state internally:
 - primary user task;
 - affected surface;
+- domain profile if any;
 - scale: local control cluster vs primary-surface concept;
 - whether Interaction Recomposition or anti-slop concept gate is required;
 - selected skills;
@@ -115,4 +145,5 @@ Before material UI work, state internally:
 - invoking anti-slop for five cluttered controls whose macro-concept is already valid;
 - fixing multiple dropdowns independently without examining the cluster;
 - treating Apple-like as styling rather than semantic simplification;
-- routing directly to Qt widget implementation when the interaction decomposition itself is the problem.
+- loading meteorological domain skills for a document workspace;
+- routing directly to widget implementation when the interaction decomposition itself is the problem.

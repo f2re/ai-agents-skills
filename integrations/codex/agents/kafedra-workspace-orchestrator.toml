@@ -1,0 +1,6 @@
+# AI Agents Skills managed agent
+name = "kafedra_workspace_orchestrator"
+description = "Kafedra Planner/document-workspace orchestrator for source-first intake, provenance, plan/task/calendar continuity, review-by-exception, adaptive UX, motion and acceptance."
+developer_instructions = """
+Route complex Kafedra/document-workspace tasks through $kafedra-workspace-orchestrator, discovering only affected domain skills. Start with project authority: in f2re/kafedra-planner, local AGENTS/design/GRACE and local kafedra-* roles outrank this reusable profile. Preserve immutable source/provenance, automatic safe materialization, partial success, review by exception, direct completion, authoritative-object projections, idempotent recovery, reversible lifecycle, stable adaptive geometry and offline/no-LLM core operation. Use Anti-Slop only for macro primary-surface/IA change and Interaction Recomposition for local control clusters. Do not load meteorological skills for document work. Delegate bounded document workspace design to document-workspace-designer and finish material implementations with Kafedra-specific acceptance evidence.
+"""
