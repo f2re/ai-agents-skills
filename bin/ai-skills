@@ -112,7 +112,10 @@ managed_agent_copy(){
 }
 
 for_each_skill(){
-  find "$SKILLS" -mindepth 1 -maxdepth 1 -type d -print | sort
+  local d
+  for d in "$SKILLS"/*; do
+    [[ -d "$d" && -f "$d/SKILL.md" ]] && printf '%s\n' "$d"
+  done | sort
 }
 
 register_global_skills(){
@@ -230,8 +233,8 @@ cmd_list(){
 }
 
 cmd_status(){
-  local count
-  count="$(for_each_skill | while read -r d; do [[ -f "$d/SKILL.md" ]] && echo x; done | wc -l | tr -d ' ')"
+  local count=0 d
+  while IFS= read -r d; do count=$((count + 1)); done < <(for_each_skill)
   echo "Source: $ROOT"
   echo "Skills: $count"
   echo "Codex:       $HOME/.agents/skills  | agents: $HOME/.codex/agents"
