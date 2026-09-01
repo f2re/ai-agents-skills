@@ -1,0 +1,77 @@
+name: Cleanup merged branches
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete merged and superseded branches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const defaultBranch = context.payload.repository?.default_branch || 'main';
+
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: 'closed',
+              per_page: 100,
+            });
+
+            const candidates = new Set(
+              pulls
+                .filter(pr => pr.merged_at && pr.head.repo?.full_name === `${owner}/${repo}`)
+                .map(pr => pr.head.ref)
+            );
+
+            // Historical branch replaced by feat/smart-existing-project-integration-v2 / PR #5.
+            candidates.add('feat/smart-existing-project-integration');
+
+            const branches = await github.paginate(github.rest.repos.listBranches, {
+              owner,
+              repo,
+              per_page: 100,
+            });
+            const existing = new Set(branches.map(branch => branch.name));
+
+            const deleted = [];
+            const skipped = [];
+
+            for (const branch of [...candidates].sort()) {
+              if (branch === defaultBranch) {
+                skipped.push(`${branch} (default branch)`);
+                continue;
+              }
+              if (!existing.has(branch)) {
+                skipped.push(`${branch} (already absent)`);
+                continue;
+              }
+
+              try {
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `heads/${branch}`,
+                });
+                deleted.push(branch);
+              } catch (error) {
+                core.setFailed(`Failed to delete ${branch}: ${error.message}`);
+                return;
+              }
+            }
+
+            core.summary
+              .addHeading('Branch cleanup')
+              .addRaw(`Deleted: ${deleted.length ? deleted.join(', ') : 'none'}\n\n`)
+              .addRaw(`Skipped: ${skipped.length ? skipped.join(', ') : 'none'}\n`)
+              .write();
