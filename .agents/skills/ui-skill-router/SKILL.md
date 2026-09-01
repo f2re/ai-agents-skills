@@ -1,86 +1,118 @@
 ---
 name: ui-skill-router
-description: Route UI, UX, Qt, motion, gesture, meteorological visualization, timeline, anti-slop concept-direction, and interface-audit tasks to the smallest useful set of local skills.
+description: Canonical focused-UI router for audit, control recomposition, Qt, meteorology, motion, gesture, workflow and anti-slop concept tasks; selects the smallest useful local skill set.
 ---
 
 # UI Skill Router
 
-Do not load every UI skill by default. First classify the task by user goal, stack, surface and whether the interaction concept is already settled.
+This is the canonical router for **focused UI work**. Do not load every UI skill. Classify the user goal, surface, stack and scale of redesign first.
+
+`skill-agent-orchestrator` handles multi-area delegation and synthesis; it should defer focused UI skill selection here instead of duplicating this routing table.
 
 ## Routing
 
-### Substantial new surface or redesign
+### Substantial primary-surface concept change
 
-Use `anti-slop-ui-direction` first when the task changes a primary work surface, information architecture, navigation model or visualization architecture, or when the complaint is "generic/AI-looking/dashboard/slop".
+Use `anti-slop-ui-direction` first when the task changes a primary work surface, information architecture, navigation model or visualization architecture, or the user rejects the product as generic/AI-looking/dashboard/slop.
 
-The concept gate must produce a Design Direction Contract before implementation routing. Add `design-evidence-and-intent` only if the primary job/evidence is unclear.
+The concept gate returns a Design Direction Contract before implementation routing. Add `design-evidence-and-intent` only if the primary job/evidence is unclear.
 
-Do not use this route for local visual/behavioral fixes whose concept is already known.
+Do **not** use the heavy concept ritual merely because a toolbar or small control cluster is cluttered.
 
 ### Existing UI audit
+
 Use:
 - `design-evidence-and-intent`
 - `interaction-contracts-and-flow`
 - `information-hierarchy-and-density`
 - `ui-audit-and-acceptance`
 
-Add `motion-feedback-and-microinteractions` only if motion exists or is requested. Add domain skills only for the affected surface.
+Add `dense-controls-and-selection` when the evidence includes multiple dropdowns/toggles/buttons, sequential selectors, control clutter, click tax, “simplify”, “collapse”, “Apple-like” or a request to rethink user interaction.
 
-### New or redesigned Qt/C++ interface after concept direction
+Add domain/state/motion skills only when those dimensions are actually present.
+
+### Control-cluster simplification / Apple-like rethink
+
+Use:
+- `design-evidence-and-intent`
+- `interaction-contracts-and-flow`
+- `dense-controls-and-selection`
+- `information-hierarchy-and-density`
+
+The required step is **Interaction Recomposition**, not one-for-one widget replacement. Map the user intent and semantic axes, remove derived/redundant controls, then choose tabs/segmented/popover/slider/scrubber/toolbars only where their semantics fit.
+
+Add:
+- `gesture-and-direct-manipulation` if the selected solution uses scrub/drag/direct manipulation;
+- `states-errors-and-recovery` if control changes load data asynchronously;
+- domain skills when domain semantics constrain merging.
+
+Run `ui-audit-and-acceptance` after implementation.
+
+### New or redesigned Qt/C++ interface with settled concept
+
 Use:
 - `qt-cpp-design-system`
 - `information-hierarchy-and-density`
 - `dense-controls-and-selection`
 - `interaction-contracts-and-flow`
-- `states-errors-and-recovery`
+- `states-errors-and-recovery` when async behavior exists
 
 Add workflow/motion/gesture/domain skills as needed. Preserve any accepted Design Direction Contract.
 
 ### Meteorological workstation
-Use:
-- `meteorologist-workstation-ux`
-- `radar-timeline-and-playback` for radar/satellite/nowcast time browsing
-- `time-data-navigation` for forecast cycles/leads/history
-- `viewport-map-interactions` for maps
-- `meteorological-visualization` for plots
-- `operator-accessibility-and-safety`
 
-For a new/majorly redesigned meteorological work surface, run `anti-slop-ui-direction` before this set; do not load every meteorological skill if the surface only uses a subset.
+Select only the affected domain skills:
+- `meteorologist-workstation-ux` for workstation semantics;
+- `radar-timeline-and-playback` for radar/satellite/nowcast time browsing;
+- `time-data-navigation` for forecast cycles/leads/history;
+- `viewport-map-interactions` for maps;
+- `meteorological-visualization` for plots;
+- `operator-accessibility-and-safety` for operator-critical surfaces.
+
+For a new/majorly redesigned primary surface, run anti-slop first. For a cluttered existing meteo toolbar/control panel, prefer the lighter Interaction Recomposition route plus only the affected domain skill.
 
 ### Animation or interaction feel
+
 Use:
 - `motion-feedback-and-microinteractions`
 - `gesture-and-direct-manipulation`
 - `interaction-contracts-and-flow`
 
 ### Complex import/setup wizard
+
 Use:
 - `workflow-and-progressive-disclosure`
 - `states-errors-and-recovery`
 - `interaction-contracts-and-flow`
 
+Do not use the workflow skill just to hide ordinary secondary controls in a popover/inspector; hierarchy/recomposition owns that case.
+
 ## Hard rules
 
 1. Never use a decorative skill to solve an information-architecture problem.
-2. Never redesign components before writing the user's primary tasks and expected results.
-3. For substantial redesign, do not start implementation before a defining mechanism passes the concept gate.
-4. Do not use mobile gesture patterns as primary controls in desktop Qt without pointer and keyboard alternatives.
-5. If data changes asynchronously, include `states-errors-and-recovery`.
-6. Finish implementation work with `ui-audit-and-acceptance`.
-7. Standard platform controls do not need anti-slop novelty; apply genericity tests to organizing logic and primary work surfaces.
+2. Never redesign components before stating the user's primary task and expected result.
+3. Before swapping individual controls in a frequent cluster, run Interaction Recomposition when several controls implement one user intent.
+4. Do not merge semantically independent axes solely to reduce widget count.
+5. For substantial primary-surface redesign, do not start implementation before the concept gate passes.
+6. Standard platform controls do not need anti-slop novelty.
+7. Mobile-style gestures cannot be the only path for core desktop Qt actions.
+8. If data changes asynchronously, include state/recovery behavior.
+9. Finish material implementation work with `ui-audit-and-acceptance`.
 
-## Output of routing
+## Routing output
 
-Before substantial UI work, state internally:
+Before material UI work, state internally:
 - primary user task;
-- affected surfaces;
-- whether a concept gate is required;
+- affected surface;
+- scale: local control cluster vs primary-surface concept;
+- whether Interaction Recomposition or anti-slop concept gate is required;
 - selected skills;
-- constraints that make other skills unnecessary.
+- why other skills are unnecessary.
 
 ## Anti-patterns
 
-- loading all UI skills because the task is "design";
-- invoking anti-slop for a padding/label fix;
-- treating dark mode, cards or sidebar placement as a concept;
-- routing directly to Qt implementation when the user is actually rejecting the product's generic information architecture.
+- loading all UI skills because the task says “design”;
+- invoking anti-slop for five cluttered controls whose macro-concept is already valid;
+- fixing multiple dropdowns independently without examining the cluster;
+- treating Apple-like as styling rather than semantic simplification;
+- routing directly to Qt widget implementation when the interaction decomposition itself is the problem.
