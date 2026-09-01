@@ -1,8 +1,13 @@
-# Agent compositions
+# Specialist agent compositions
 
-Agent profile — это рекомендованная композиция skills и порядок работы, а не отдельный монолитный prompt.
+These are platform-neutral descriptions of the roles registered by `ai-skills`. Native definitions live under `integrations/codex/agents`, `integrations/claude/agents` and `integrations/antigravity/agents`.
 
-- `ui-ux-auditor.md` — read-only аудит пользовательских ожиданий, flow и visual system.
-- `qt-interface-designer.md` — проектирование и реализация Qt/C++ интерфейсов.
-- `meteo-workstation-designer.md` — специализированный агент для метеорологических рабочих мест.
-- `motion-interaction-reviewer.md` — аудит motion, gestures и direct manipulation.
+| Agent | Purpose |
+|---|---|
+| [`ai-skills-orchestrator`](ai-skills-orchestrator.md) | Routes complex work, chooses minimal skills/specialists, integrates results. |
+| [`ui-ux-auditor`](ui-ux-auditor.md) | Evidence-based interface and interaction audit. |
+| [`qt-interface-designer`](qt-interface-designer.md) | Native Qt/C++ UI architecture and implementation. |
+| [`meteo-workstation-designer`](meteo-workstation-designer.md) | Meteorological workstation, radar/time/map/scientific UX. |
+| [`motion-interaction-reviewer`](motion-interaction-reviewer.md) | Motion, gestures, direct manipulation and interaction feedback. |
+
+Specialists are intentionally narrow. They should not all be invoked for every UI task.

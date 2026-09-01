@@ -1,32 +1,37 @@
-# UI/UX skills catalog
+# AI Agents Skills catalog
 
-## Маршрутизация
+The catalog is intentionally split into focused skills so Codex, Claude Code and Antigravity can use progressive disclosure instead of loading one monolithic design prompt.
 
-- `ui-skill-router` — выбирает минимальный набор skills под задачу.
-- `design-evidence-and-intent` — устанавливает доказанный design/interaction contract до изменений.
-- `ui-audit-and-acceptance` — сквозной аудит и критерии приёмки.
+## Orchestration
 
-## Базовый интерфейс
+- [`skill-agent-orchestrator`](skill-agent-orchestrator/SKILL.md) — top-level routing for complex multi-area tasks; chooses skills and optional specialist agents.
+- [`ui-skill-router`](ui-skill-router/SKILL.md) — lightweight routing for focused UI tasks.
+- [`design-evidence-and-intent`](design-evidence-and-intent/SKILL.md) — establishes evidence, user intent and interaction contract before redesign.
+- [`ui-audit-and-acceptance`](ui-audit-and-acceptance/SKILL.md) — final behavior/design audit and acceptance criteria.
 
-- `qt-cpp-design-system` — нативная дизайн-система Qt/C++.
-- `information-hierarchy-and-density` — иерархия, плотность, spacing и progressive information density.
-- `dense-controls-and-selection` — combo/select/search/multi-select/segmented/toolbars.
-- `interaction-contracts-and-flow` — intent → action → feedback → result для каждого пользовательского действия.
-- `workflow-and-progressive-disclosure` — мастера, импорт, сложные workflows и раскрытие деталей по мере необходимости.
-- `states-errors-and-recovery` — loading/empty/stale/partial/error/retry/cancel.
-- `operator-accessibility-and-safety` — keyboard, focus, contrast, non-color cues, operator safety.
+## Base interface engineering
 
-## Метеорология
+- [`qt-cpp-design-system`](qt-cpp-design-system/SKILL.md) — native Qt/C++ design-system rules.
+- [`information-hierarchy-and-density`](information-hierarchy-and-density/SKILL.md) — hierarchy, grouping, spacing and professional density.
+- [`dense-controls-and-selection`](dense-controls-and-selection/SKILL.md) — combo/search/multi-select/segmented controls and compact toolbars.
+- [`interaction-contracts-and-flow`](interaction-contracts-and-flow/SKILL.md) — `intent → trigger → feedback → pending → result → recovery` for user actions.
+- [`workflow-and-progressive-disclosure`](workflow-and-progressive-disclosure/SKILL.md) — wizards, imports, complex flows and staged disclosure.
+- [`states-errors-and-recovery`](states-errors-and-recovery/SKILL.md) — loading/empty/stale/partial/error/retry/cancel.
+- [`operator-accessibility-and-safety`](operator-accessibility-and-safety/SKILL.md) — keyboard/focus, non-color cues and operator safety.
 
-- `meteorologist-workstation-ux` — структура рабочего места метеоролога.
-- `radar-timeline-and-playback` — компактный таймлайн радарных/спутниковых/nowcast данных.
-- `time-data-navigation` — общая временная навигация, forecast cycles и adaptive stepping.
-- `viewport-map-interactions` — map zoom/pan/LOD/data requests.
-- `meteorological-visualization` — графики, crosshair, ensembles, aerology, uncertainty.
+## Meteorology
 
-## Motion и direct manipulation
+- [`meteorologist-workstation-ux`](meteorologist-workstation-ux/SKILL.md) — professional meteorological workstation structure.
+- [`radar-timeline-and-playback`](radar-timeline-and-playback/SKILL.md) — compact radar/satellite/nowcast timeline, exact times, frame states and playback.
+- [`time-data-navigation`](time-data-navigation/SKILL.md) — valid time, forecast cycles and adaptive time stepping.
+- [`viewport-map-interactions`](viewport-map-interactions/SKILL.md) — map zoom/pan, semantic LOD and data request behavior.
+- [`meteorological-visualization`](meteorological-visualization/SKILL.md) — scientific plots, crosshair, ensembles, aerology and uncertainty.
 
-- `motion-feedback-and-microinteractions` — purposeful motion, duration/easing/tokens/interruptibility.
-- `gesture-and-direct-manipulation` — mouse/trackpad/wheel/drag/swipe semantics и snap/bounds.
+## Motion and direct manipulation
 
-Обычно агент должен начинать с `ui-skill-router`, а не загружать весь каталог одновременно.
+- [`motion-feedback-and-microinteractions`](motion-feedback-and-microinteractions/SKILL.md) — purposeful motion, duration/easing, feedback and interruptibility.
+- [`gesture-and-direct-manipulation`](gesture-and-direct-manipulation/SKILL.md) — mouse/trackpad/wheel/drag/swipe semantics, snap and bounds.
+
+## Routing rule
+
+Do not load this catalog wholesale. Start from task intent and descriptions. Use `skill-agent-orchestrator` for complex multi-area work or `ui-skill-router` for a focused UI task, then activate only the smallest relevant set.

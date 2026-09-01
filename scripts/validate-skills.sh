@@ -7,7 +7,8 @@ SKILLS_DIR="$ROOT_DIR/.agents/skills"
 fail=0
 count=0
 
-while IFS= read -r file; do
+for file in "$SKILLS_DIR"/*/SKILL.md; do
+  [[ -f "$file" ]] || continue
   count=$((count + 1))
   dir_name="$(basename "$(dirname "$file")")"
 
@@ -38,7 +39,7 @@ while IFS= read -r file; do
   if ! grep -Eq 'Anti-pattern|Антипаттерн|Anti-patterns' "$file"; then
     echo "WARN  $file: no explicit anti-pattern section" >&2
   fi
-done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name SKILL.md -type f | sort)
+done
 
 if [[ $count -eq 0 ]]; then
   echo "ERROR: no skills found" >&2

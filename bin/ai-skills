@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SKILLS="$ROOT/.agents/skills"
+BEGIN='<!-- ai-agents-skills:begin -->'
+END='<!-- ai-agents-skills:end -->'
+
+info(){ printf '→ %s\n' "$*"; }
+ok(){ printf '✓ %s\n' "$*"; }
+warn(){ printf 'WARN: %s\n' "$*" >&2; }
+die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+
+usage(){
+  cat <<'USAGE'
+ai-skills — register and orchestrate AI Agents Skills
+
+Commands:
+  global                 Register skills, agents and compact global routing rules.
+  project [PATH]         Integrate agents and routing rules into a repository.
+  project [PATH] --vendor  Also copy skills into the repository for team sharing.
+  update                 Re-run the remote bootstrap and refresh registrations.
+  list [skills|agents]   Show the registered catalog without loading skill bodies.
+  status                 Show installed targets and skill count.
+  doctor                 Validate source plus platform registrations.
+  uninstall              Remove managed symlinks/blocks; preserve unrelated user files.
+  help                   Show this help.
+
+The installer never replaces a non-symlink skill or agent with the same name.
+USAGE
+}
+
+strip_block(){
+  local file="$1" tmp
+  [[ -f "$file" ]] || return 0
+  tmp="$(mktemp)"
+  awk -v b="$BEGIN" -v e="$END" '
+    $0==b {skip=1; next}
+    $0==e {skip=0; next}
+    !skip {print}
+  ' "$file" > "$tmp"
+  cat "$tmp" > "$file"
+  rm -f "$tmp"
+}
+
+upsert_block(){
+  local file="$1" body="$2"
+  mkdir -p "$(dirname "$file")"
+  touch "$file"
+  strip_block "$file"
+  local tmp="$(mktemp)"
+  awk '{lines[NR]=$0} END {n=NR; while(n>0 && lines[n] ~ /^[[:space:]]*$/) n--; for(i=1;i<=n;i++) print lines[i]}' "$file" > "$tmp"
+  cat "$tmp" > "$file"; rm -f "$tmp"
+  [[ -s "$file" ]] && printf '\n\n' >> "$file"
+  printf '%s\n' "$BEGIN" >> "$file"
+  cat "$body" >> "$file"
+  [[ "$(tail -c1 "$body" 2>/dev/null || true)" == "" ]] || printf '\n' >> "$file"
+  printf '%s\n' "$END" >> "$file"
+}
+
+managed_link(){
+  local dst="$1" target
+  [[ -L "$dst" ]] || return 1
+  target="$(readlink "$dst" 2>/dev/null || true)"
+  [[ "$target" == "$ROOT"/* ]]
+}
+
+safe_link(){
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [[ -L "$dst" ]]; then
+    if managed_link "$dst"; then ln -sfn "$src" "$dst"; else warn "kept external symlink $dst"; fi
+    return 0
+  fi
+  if [[ -e "$dst" ]]; then
+    warn "kept existing $dst"
+    return 0
+  fi
+  ln -s "$src" "$dst"
+}
+
+safe_copy(){
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [[ -e "$dst" || -L "$dst" ]]; then
+    warn "kept existing $dst"
+    return 0
+  fi
+  if [[ -d "$src" ]]; then cp -R "$src" "$dst"; else cp "$src" "$dst"; fi
+}
+
+managed_agent_copy(){
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [[ -L "$dst" ]]; then
+    warn "kept external symlink $dst"
+    return 0
+  fi
+  if [[ -d "$dst" ]]; then
+    if [[ -f "$dst/agent.md" ]] && grep -q 'AI Agents Skills managed agent' "$dst/agent.md"; then
+      rm -rf "$dst"; cp -R "$src" "$dst"; return 0
+    fi
+    warn "kept existing $dst"; return 0
+  fi
+  if [[ -f "$dst" ]]; then
+    if grep -q 'AI Agents Skills managed agent' "$dst"; then
+      cp "$src" "$dst"; return 0
+    fi
+    warn "kept existing $dst"; return 0
+  fi
+  if [[ -d "$src" ]]; then cp -R "$src" "$dst"; else cp "$src" "$dst"; fi
+}
+
+for_each_skill(){
+  local d
+  for d in "$SKILLS"/*; do
+    [[ -d "$d" && -f "$d/SKILL.md" ]] && printf '%s\n' "$d"
+  done | sort
+}
+
+register_global_skills(){
+  local d name target
+  while IFS= read -r d; do
+    [[ -f "$d/SKILL.md" ]] || continue
+    name="$(basename "$d")"
+    for target in \
+      "$HOME/.agents/skills/$name" \
+      "$HOME/.claude/skills/$name" \
+      "$HOME/.gemini/config/skills/$name" \
+      "$HOME/.gemini/antigravity-cli/skills/$name" \
+      "$HOME/.gemini/antigravity/skills/$name"
+    do safe_link "$d" "$target"; done
+  done < <(for_each_skill)
+}
+
+register_codex_agents(){
+  local f
+  for f in "$ROOT"/integrations/codex/agents/*.toml; do
+    [[ -f "$f" ]] || continue
+    safe_link "$f" "$HOME/.codex/agents/$(basename "$f")"
+  done
+}
+
+register_claude_agents(){
+  local f
+  for f in "$ROOT"/integrations/claude/agents/*.md; do
+    [[ -f "$f" ]] || continue
+    safe_link "$f" "$HOME/.claude/agents/$(basename "$f")"
+  done
+}
+
+register_antigravity_agents(){
+  local d name
+  for d in "$ROOT"/integrations/antigravity/agents/*; do
+    [[ -d "$d" && -f "$d/agent.md" ]] || continue
+    name="$(basename "$d")"
+    safe_link "$d" "$HOME/.gemini/config/agents/$name"
+  done
+}
+
+cmd_global(){
+  info "Registering progressive-disclosure skills"
+  register_global_skills
+  info "Registering custom agents"
+  register_codex_agents; register_claude_agents; register_antigravity_agents
+  info "Installing compact global orchestration rules"
+  upsert_block "$HOME/.codex/AGENTS.md" "$ROOT/integrations/shared/global-orchestration.md"
+  upsert_block "$HOME/.claude/CLAUDE.md" "$ROOT/integrations/shared/global-orchestration.md"
+  upsert_block "$HOME/.gemini/GEMINI.md" "$ROOT/integrations/shared/global-orchestration.md"
+  ok "Global registration complete"
+}
+
+copy_project_agents(){
+  local project="$1" f d name
+  mkdir -p "$project/.codex/agents" "$project/.claude/agents" "$project/.agents/agents"
+  for f in "$ROOT"/integrations/codex/agents/*.toml; do [[ -f "$f" ]] && managed_agent_copy "$f" "$project/.codex/agents/$(basename "$f")"; done
+  for f in "$ROOT"/integrations/claude/agents/*.md; do [[ -f "$f" ]] && managed_agent_copy "$f" "$project/.claude/agents/$(basename "$f")"; done
+  for d in "$ROOT"/integrations/antigravity/agents/*; do
+    [[ -d "$d" ]] || continue; name="$(basename "$d")"; managed_agent_copy "$d" "$project/.agents/agents/$name"
+  done
+}
+
+vendor_project_skills(){
+  local project="$1" d name
+  mkdir -p "$project/.agents/skills" "$project/.claude/skills"
+  while IFS= read -r d; do
+    [[ -f "$d/SKILL.md" ]] || continue; name="$(basename "$d")"
+    safe_copy "$d" "$project/.agents/skills/$name"
+    safe_copy "$d" "$project/.claude/skills/$name"
+  done < <(for_each_skill)
+}
+
+cmd_project(){
+  local project="${1:-.}" vendor=0
+  shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in --vendor) vendor=1;; *) die "unknown project option: $1";; esac
+    shift
+  done
+  project="$(cd "$project" && pwd)"
+  info "Integrating project $project"
+  copy_project_agents "$project"
+  upsert_block "$project/AGENTS.md" "$ROOT/integrations/shared/project-orchestration.md"
+  upsert_block "$project/CLAUDE.md" "$ROOT/integrations/shared/project-orchestration.md"
+  upsert_block "$project/GEMINI.md" "$ROOT/integrations/shared/project-orchestration.md"
+  if [[ ! -e "$project/DESIGN.md" ]]; then cp "$ROOT/templates/DESIGN.md" "$project/DESIGN.md"; fi
+  upsert_block "$project/DESIGN.md" "$ROOT/integrations/shared/design-orchestration.md"
+  if [[ $vendor -eq 1 ]]; then vendor_project_skills "$project"; fi
+  ok "Project integration complete"
+}
+
+cmd_list(){
+  local kind="${1:-skills}" d f name desc
+  case "$kind" in
+    skills)
+      while IFS= read -r d; do
+        [[ -f "$d/SKILL.md" ]] || continue
+        name="$(sed -n 's/^name:[[:space:]]*//p' "$d/SKILL.md" | head -n1)"
+        desc="$(sed -n 's/^description:[[:space:]]*//p' "$d/SKILL.md" | head -n1)"
+        printf '%-38s %s\n' "$name" "$desc"
+      done < <(for_each_skill)
+      ;;
+    agents)
+      for f in "$ROOT"/integrations/codex/agents/*.toml; do
+        [[ -f "$f" ]] || continue
+        name="$(sed -n 's/^name[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' "$f" | head -n1)"
+        desc="$(sed -n 's/^description[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' "$f" | head -n1)"
+        printf '%-38s %s\n' "$name" "$desc"
+      done
+      ;;
+    *) die "list expects 'skills' or 'agents'" ;;
+  esac
+}
+
+cmd_status(){
+  local count=0 d
+  while IFS= read -r d; do count=$((count + 1)); done < <(for_each_skill)
+  echo "Source: $ROOT"
+  echo "Skills: $count"
+  echo "Codex:       $HOME/.agents/skills  | agents: $HOME/.codex/agents"
+  echo "Claude Code: $HOME/.claude/skills | agents: $HOME/.claude/agents"
+  echo "Antigravity: $HOME/.gemini/config/skills | agents: $HOME/.gemini/config/agents"
+}
+
+cmd_doctor(){
+  "$ROOT/scripts/validate-skills.sh"
+  bash -n "$ROOT/install.sh" "$ROOT/bin/ai-skills"
+  local failed=0 path
+  for path in "$HOME/.agents/skills/skill-agent-orchestrator" "$HOME/.claude/skills/skill-agent-orchestrator" "$HOME/.gemini/config/skills/skill-agent-orchestrator"; do
+    if [[ ! -e "$path" ]]; then warn "missing registration: $path"; failed=1; fi
+  done
+  [[ $failed -eq 0 ]] || return 1
+  ok "Doctor passed"
+}
+
+cmd_uninstall(){
+  local d name target
+  while IFS= read -r d; do
+    [[ -f "$d/SKILL.md" ]] || continue; name="$(basename "$d")"
+    for target in "$HOME/.agents/skills/$name" "$HOME/.claude/skills/$name" "$HOME/.gemini/config/skills/$name" "$HOME/.gemini/antigravity-cli/skills/$name" "$HOME/.gemini/antigravity/skills/$name"; do
+      managed_link "$target" && rm -f "$target"
+    done
+  done < <(for_each_skill)
+  local f
+  for f in "$ROOT"/integrations/codex/agents/*.toml; do target="$HOME/.codex/agents/$(basename "$f")"; managed_link "$target" && rm -f "$target"; done
+  for f in "$ROOT"/integrations/claude/agents/*.md; do target="$HOME/.claude/agents/$(basename "$f")"; managed_link "$target" && rm -f "$target"; done
+  for d in "$ROOT"/integrations/antigravity/agents/*; do [[ -d "$d" ]] || continue; name="$(basename "$d")"; target="$HOME/.gemini/config/agents/$name"; managed_link "$target" && rm -f "$target"; done
+  strip_block "$HOME/.codex/AGENTS.md"; strip_block "$HOME/.claude/CLAUDE.md"; strip_block "$HOME/.gemini/GEMINI.md"
+  ok "Managed registrations removed. Source directory was preserved: $ROOT"
+}
+
+cmd_update(){
+  curl -fsSL https://raw.githubusercontent.com/f2re/ai-agents-skills/main/install.sh | bash
+}
+
+case "${1:-help}" in
+  global) shift; cmd_global "$@" ;;
+  project) shift; cmd_project "$@" ;;
+  update) shift; cmd_update "$@" ;;
+  list) shift; cmd_list "$@" ;;
+  status) shift; cmd_status "$@" ;;
+  doctor) shift; cmd_doctor "$@" ;;
+  uninstall) shift; cmd_uninstall "$@" ;;
+  help|-h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac
