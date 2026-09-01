@@ -14,7 +14,7 @@ jobs:
         run: bash scripts/validate-skills.sh
       - name: Validate installer and platform registrations
         run: bash scripts/validate-package.sh
-      - name: Smoke-test bootstrap download path
+      - name: Smoke-test installed launcher and bootstrap path
         env:
           AI_AGENTS_SKILLS_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
@@ -22,5 +22,8 @@ jobs:
           export XDG_DATA_HOME="$HOME/.local/share"
           export AI_AGENTS_SKILLS_HOME="$HOME/.local/share/ai-agents-skills"
           export AI_AGENTS_SKILLS_BIN="$HOME/.local/bin"
-          bash install.sh --no-global
-          "$HOME/.local/bin/ai-skills" help >/dev/null
+          bash install.sh
+          test ! -L "$HOME/.local/bin/ai-skills"
+          grep -q '^# AI Agents Skills managed launcher$' "$HOME/.local/bin/ai-skills"
+          "$HOME/.local/bin/ai-skills" doctor
+          "$HOME/.local/bin/ai-skills" status | grep -F "Source: $HOME/.local/share/ai-agents-skills"
