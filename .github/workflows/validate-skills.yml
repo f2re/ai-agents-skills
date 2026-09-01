@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate skill structure
         run: bash scripts/validate-skills.sh
+      - name: Validate Docomator document-workstation profile
+        run: bash scripts/validate-docomator-profile.sh
       - name: Validate installer and platform registrations
         run: bash scripts/validate-package.sh
       - name: Smoke-test installed launcher and bootstrap path

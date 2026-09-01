@@ -6,7 +6,7 @@
 
 [![Validate skills](https://github.com/f2re/ai-agents-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/f2re/ai-agents-skills/actions/workflows/validate-skills.yml)
 
-A reusable engineering layer for coding agents: safe repository integration, UI/UX decision systems, native Qt/C++, meteorological workstations, Qwt/scientific visualization, motion/direct manipulation and evidence-based acceptance.
+A reusable engineering layer for coding agents: safe repository integration, UI/UX decision systems, document-automation workstations, offline web UI, native Qt/C++, meteorological workstations, Qwt/scientific visualization, motion/direct manipulation and evidence-based acceptance.
 
 </div>
 
@@ -23,6 +23,8 @@ This repository treats these as different problems:
 - **Interaction Recomposition** — rethinks a local cluster of controls around one user intent without invoking a heavy macro-design ceremony.
 
 It also integrates into established repositories without replacing project-owned instructions, design memory, skills or agents.
+
+The library is deliberately multi-domain. Shared interaction principles are reused, while platform/domain skills are selected only for the actual project. A local HTML/CSS/JavaScript document product should not be implemented as Qt merely because Qt skills are present, and a document workflow should not inherit meteorological map/time metaphors merely because the original catalog started there.
 
 ## Install
 
@@ -68,7 +70,7 @@ flowchart TD
     S -->|Local control clutter / click tax / Apple-like simplification| IR[Interaction Recomposition\ndense-controls-and-selection]
     S -->|Settled local issue| F[Focused skill]
 
-    DC --> IMPL[Qt / Meteo / Motion implementation]
+    DC --> IMPL[Document / Offline Web / Qt / Meteo / Motion implementation]
     IR --> IMPL
     F --> IMPL
     IMPL --> AU[ui-audit-and-acceptance]
@@ -120,15 +122,27 @@ ECMWF 00Z                         +18 h
 
 where model/run remain explicit context, valid time is the primary navigation surface, and lead is derived rather than a fourth independent selector.
 
+A document-generation cluster might become:
+
+```text
+Шаблон: Приказ о назначении
+Получатели: Отдел разработки · 27 человек
+Результат: 27 документов
+
+[Проверить и сформировать]
+```
+
+where expected count and preflight are derived/status, not extra editable selectors.
+
 The goal is **minimum unnecessary decisions**, not minimum widget count.
 
 ### Apple-like, without cargo cult
 
-Current Apple HIG is used for interaction semantics rather than visual imitation:
+Current Apple-like interaction craft is used for semantic economy rather than visual imitation:
 
 - tabs for related main-content panes;
 - segmented controls for a small set of closely related modes/actions;
-- popovers for small temporary related controls that should not permanently consume the work surface;
+- popovers/inspectors for small temporary related controls that should not permanently consume the work surface;
 - pop-up/combo for compact mutually-exclusive selection;
 - slider/scrubber only for a real ordered range;
 - deliberately small logical toolbar groups;
@@ -137,6 +151,41 @@ Current Apple HIG is used for interaction semantics rather than visual imitation
 Do not translate “Apple-like” into glass, pills, huge whitespace or decorative animation.
 
 Worked cases: [`dense-controls-and-selection/references/control-recomposition.md`](.agents/skills/dense-controls-and-selection/references/control-recomposition.md).
+
+## Docomator / document-workstation profile
+
+The Docomator profile reinterprets the reusable patterns around document work rather than renaming meteorological controls.
+
+The defining global route is:
+
+```text
+Данные → Шаблон → Выпуск → Результат
+```
+
+It is a readiness/navigation spine, not a rigid wizard. Surface-specific mechanisms are:
+
+- **Visual Template Studio:** document canvas + selection-driven contextual inspector;
+- **Document generation:** exact composition + revision-bound preflight + correction + persisted result;
+- **Extraction/import:** automatic proposal first, focused correction second, explicit mutation last;
+- **Results:** attention-ordered operation/result register.
+
+For the current Docomator implementation, the platform skill is [`offline-web-interface-engineering`](.agents/skills/offline-web-interface-engineering/SKILL.md), because the actual product UI is local offline HTML/CSS/JavaScript. `qt-cpp-design-system` remains available for real Qt projects but is not selected for Docomator by default.
+
+The profile preserves critical document truth:
+
+- browser DOM/HTML/CSS is a projection, not persisted Office binding truth;
+- template/source/result identity remains explicit in human terms;
+- stale preview/preflight cannot remain valid after dependent inputs change;
+- extraction errors are structured by row/cell/value/action rather than parsed from localized text;
+- read/preview does not silently create data;
+- entered corrections and prepared generation context survive recoverable errors;
+- runtime remains offline and document/LLM content remains untrusted.
+
+See:
+
+- [`docs/docomator-ui-profile.md`](docs/docomator-ui-profile.md) — full meteo/Qt → document pattern mapping and design direction;
+- [`docs/docomator-ui-review-checklist.md`](docs/docomator-ui-review-checklist.md) — document-specific acceptance gate;
+- [`anti-slop-ui-direction/references/examples/docomator-document-workbench.md`](.agents/skills/anti-slop-ui-direction/references/examples/docomator-document-workbench.md) — three concept mechanisms and rejection tests.
 
 ## Skill catalog
 
@@ -147,6 +196,11 @@ Worked cases: [`dense-controls-and-selection/references/control-recomposition.md
 | Routing | [`ui-skill-router`](.agents/skills/ui-skill-router/SKILL.md) | Canonical focused UI routing |
 | Concept | [`anti-slop-ui-direction`](.agents/skills/anti-slop-ui-direction/SKILL.md) | Macro concept gate and Design Direction Contract |
 | Evidence | [`design-evidence-and-intent`](.agents/skills/design-evidence-and-intent/SKILL.md) | Evidence, intent, constraints |
+| Documents | [`document-workstation-ux`](.agents/skills/document-workstation-ux/SKILL.md) | Document route, primary work objects, provenance, fast access and state truth |
+| Documents | [`document-template-canvas-and-binding`](.agents/skills/document-template-canvas-and-binding/SKILL.md) | DOCX/XLSX visual canvas, validated selection/binding, repeats and trial |
+| Documents | [`document-generation-flow`](.agents/skills/document-generation-flow/SKILL.md) | Audience/output/preflight/correction/launch/partial retry/results |
+| Documents | [`document-extraction-and-import-review`](.agents/skills/document-extraction-and-import-review/SKILL.md) | Automatic-first extraction/import, source-linked review and structured repair |
+| Offline Web | [`offline-web-interface-engineering`](.agents/skills/offline-web-interface-engineering/SKILL.md) | Semantic local web UI, tokens/CSP/reflow/accessibility/motion |
 | Flow | [`interaction-contracts-and-flow`](.agents/skills/interaction-contracts-and-flow/SKILL.md) | Intent → feedback → result/recovery, click tax |
 | Controls | [`dense-controls-and-selection`](.agents/skills/dense-controls-and-selection/SKILL.md) | Interaction Recomposition + tabs/segments/combo/popover/slider/scrubber |
 | Hierarchy | [`information-hierarchy-and-density`](.agents/skills/information-hierarchy-and-density/SKILL.md) | Density, grouping, persistent vs contextual UI |
@@ -159,9 +213,9 @@ Worked cases: [`dense-controls-and-selection/references/control-recomposition.md
 | Time | [`time-data-navigation`](.agents/skills/time-data-navigation/SKILL.md) | Valid time / run / lead navigation |
 | Maps | [`viewport-map-interactions`](.agents/skills/viewport-map-interactions/SKILL.md) | Map zoom/pan/LOD/request behavior |
 | Plots | [`meteorological-visualization`](.agents/skills/meteorological-visualization/SKILL.md) | Qwt/scientific plots, ensembles, aerology, uncertainty |
-| Motion | [`motion-feedback-and-microinteractions`](.agents/skills/motion-feedback-and-microinteractions/SKILL.md) | Purpose/frequency motion |
+| Motion | [`motion-feedback-and-microinteractions`](.agents/skills/motion-feedback-and-microinteractions/SKILL.md) | Purpose/frequency motion across document/Qt/web work |
 | Gestures | [`gesture-and-direct-manipulation`](.agents/skills/gesture-and-direct-manipulation/SKILL.md) | Drag/scrub/wheel/snap/direct manipulation |
-| Acceptance | [`ui-audit-and-acceptance`](.agents/skills/ui-audit-and-acceptance/SKILL.md) | Flow, control fragmentation, states, domain and concept regression |
+| Acceptance | [`ui-audit-and-acceptance`](.agents/skills/ui-audit-and-acceptance/SKILL.md) | Flow, control fragmentation, states, document/meteo domain and concept regression |
 
 ## Specialist roles
 
@@ -175,7 +229,7 @@ Worked cases: [`dense-controls-and-selection/references/control-recomposition.md
 | [`meteo-workstation-designer`](agents/meteo-workstation-designer.md) | Meteorological operational UX, including time/model control recomposition |
 | [`motion-interaction-reviewer`](agents/motion-interaction-reviewer.md) | Gestures, scrub/drag, motion and feedback |
 
-Do not spawn all roles. Local control cleanup normally needs focused skills or at most UI/UX Auditor; the methodology director is deliberately not an extra hop.
+Do not spawn all roles. Document automation uses the focused document skills directly unless an existing auditor/motion/concept specialist adds a bounded independent workstream.
 
 ## Platform registration
 
@@ -211,22 +265,28 @@ Project integration uses a non-destructive authority-map model rather than rewri
 - derived state offered as another selector;
 - slider for arbitrary categories;
 - tabs/segmented controls chosen for appearance rather than semantics;
-- permanent secondary panels consuming map/plot area;
+- permanent secondary panels consuming the primary work surface;
 - global spinners for local async work;
 - hiding domain provenance to make UI visually minimal;
 - Apple-like interpreted as glass/pills/whitespace;
+- routing a local offline web product to Qt because the catalog contains Qt skills;
+- treating browser DOM/pixels as persisted DOCX/XLSX binding truth;
+- preserving stale preflight after template/audience/data changes;
+- rebuilding structured import errors by regexp from localized text;
+- decorative document animation that delays frequent work;
 - installing framework roles over established project-local authority.
 
 See [`docs/patterns-and-antipatterns.md`](docs/patterns-and-antipatterns.md).
 
 ## Validation
 
-GitHub Actions checks skill structure, canonical agent-name parity across Codex/Claude/Antigravity, required recomposition registrations, non-destructive project integration, vendor collision handling and the real bootstrap path.
+GitHub Actions checks skill structure, the Docomator document-workstation profile, canonical agent-name parity across Codex/Claude/Antigravity, required recomposition registrations, non-destructive project integration, vendor collision handling and the real bootstrap path.
 
 Run locally:
 
 ```bash
 bash scripts/validate-skills.sh
+bash scripts/validate-docomator-profile.sh
 bash scripts/validate-package.sh
 ```
 
@@ -236,4 +296,4 @@ Research and adaptation notes: [`docs/source-research.md`](docs/source-research.
 
 ---
 
-**Build around the user's work object. Remove interaction machinery that exists only because the backend has fields.**
+**Build around the user's work object. Remove interaction machinery that exists only because the backend has fields. Preserve domain truth even when the UI becomes quieter.**
