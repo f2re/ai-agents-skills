@@ -12,5 +12,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate skill structure
         run: bash scripts/validate-skills.sh
-      - name: Check installer syntax
-        run: bash -n scripts/install-ui-skills.sh
+      - name: Validate installer and platform registrations
+        run: bash scripts/validate-package.sh
