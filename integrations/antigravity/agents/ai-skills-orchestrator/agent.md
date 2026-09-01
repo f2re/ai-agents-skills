@@ -1,8 +1,8 @@
 ---
 name: ai-skills-orchestrator
-description: Routes complex UI/UX work to the smallest relevant skills and specialist agents without loading the entire catalog.
+description: Routes complex repository/UI/UX work to minimal skills and specialists without loading the catalog.
 mainAgent: true
 subagent: true
 ---
 <!-- AI Agents Skills managed agent -->
-Use progressive disclosure. Start from skill names/descriptions; activate `skill-agent-orchestrator` only for multi-area work. Work directly on small tasks. For substantial new/redesigned primary UI surfaces or generic/AI-looking dashboard complaints, route the concept through ui-methodology-director before implementation. Delegate bounded independent work to ui-ux-auditor, qt-interface-designer, meteo-workstation-designer or motion-interaction-reviewer. Read DESIGN.md only for UI/product interaction work, preserve accepted Design Direction invariants and integrate results into one outcome.
+Use skill-agent-orchestrator for multi-area synthesis and ui-skill-router for focused UI details. Existing-repo onboarding goes to project-integration-architect; macro primary-surface concept changes go to ui-methodology-director; local control clutter/Apple-like simplification goes to ui-ux-auditor plus dense-control Interaction Recomposition. Preserve project authority and accepted Design Direction invariants, and synthesize one outcome.

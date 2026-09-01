@@ -2,131 +2,97 @@
 
 Дата актуализации: 2026-09-01.
 
-Этот документ фиксирует не ссылки «для вдохновения», а конкретные принципы, которые разрешено переносить в skills.
+Здесь фиксируются не ссылки «для вдохновения», а принципы, которые разрешено переносить в skills.
 
 ## UI Skills — https://ui-skills.com
 
-Каталог design-engineering skills для разных coding agents. Важный архитектурный вывод: не нужен один монолитный «дизайнерский промпт». Нужны маршрутизируемые skills с разными обязанностями.
+Архитектурный вывод: вместо одного монолитного designer prompt нужны маршрутизируемые skills с разными обязанностями.
 
-Переносим:
-- router выбирает минимальный набор skills;
-- UI audit должен опираться на доказанный design evidence, а не домыслы;
-- motion audit отдельно проверяет purpose/frequency, easing/duration, physicality/origin, interruptibility, performance, accessibility, cohesion/tokens и missed opportunities;
-- design-system reconstruction идёт от tokens/shared primitives/representative consumers, а не от визуальных догадок;
-- high-confidence root causes важнее длинного списка мелких замечаний.
+Переносим metadata-first routing, evidence-based audit, отдельный motion audit, reconstruction от tokens/shared primitives/representative consumers и приоритет high-confidence root causes.
 
-Не переносим буквально web-only CSS/React рецепты.
+Не переносим буквально web-only CSS/React recipes.
 
 ## TrueSpace Anti-Slop Design Director — https://truespaceai.ru/design/
 
-Источник полезен не своим poster style, а decision-making structure: перед генерацией создаются несколько разных по идее концепций, затем generic/template варианты отбрасываются, выбирается один defining mechanism, а готовый результат проверяется против исходной идеи.
+Полезен decision-making structure, а не poster style: несколько разных по идее концепций → generic/template rejection → defining mechanism → regression review.
 
-Переносим в professional UI:
-- `IDEA != STYLE` переводим в `UX/INFORMATION MECHANISM != LAYOUT/THEME`;
-- несколько концепций должны различаться organizing mechanism, а не palette/sidebar/cards;
-- genericity test: если предметную область можно заменить несвязанной и primary work surface остаётся естественной, концепция слишком шаблонная;
-- templateability test: primary surface не должна превращаться в другой продукт заменой labels/accent/data series;
-- mechanism library используется как prompts for reasoning, а не как готовые templates;
-- после реализации нужен regression check: defining idea может деградировать в generic component layout.
+Переносим:
+- `IDEA != STYLE` → `UX/INFORMATION MECHANISM != LAYOUT/THEME`;
+- concepts различаются organizing mechanism, не palette/sidebar/cards;
+- genericity/templateability tests для primary work surface;
+- mechanism library как reasoning prompts, не templates;
+- regression check после реализации.
 
-Не переносим:
-- постерную visual school (гигантская типографика, risograph/print palette и т.п.) как default для профессионального desktop software;
-- абсолютные bans на отдельные визуальные приёмы без учёта задачи;
-- требование уникальности для стандартных dialogs/menus/combos/tables;
-- правило «не задавать design questions» как универсальное: для сложного engineering workflow недостающий operational fact иногда необходимо установить.
+Не переносим poster visual school, абсолютные bans без задачи, уникальность стандартных controls и универсальный запрет design questions.
 
-Адаптация в этом репозитории — `anti-slop-ui-direction` + `ui-methodology-director`, работающие перед domain/Qt skills только для существенных design/redesign задач.
+Адаптация: `anti-slop-ui-direction` + `ui-methodology-director` только для существенных macro redesign.
+
+## Apple Human Interface Guidelines — https://developer.apple.com/design/human-interface-guidelines/
+
+Используем HIG как источник **семантики desktop interactions**, а не как визуальную тему macOS.
+
+Актуальные разделы:
+- Design principles — https://developer.apple.com/design/human-interface-guidelines/design-principles
+- Designing for macOS — https://developer.apple.com/design/human-interface-guidelines/designing-for-macos
+- Segmented controls — https://developer.apple.com/design/human-interface-guidelines/segmented-controls
+- Tab views — https://developer.apple.com/design/human-interface-guidelines/tab-views
+- Popovers — https://developer.apple.com/design/human-interface-guidelines/popovers
+- Pop-up buttons — https://developer.apple.com/design/human-interface-guidelines/pop-up-buttons
+- Toolbars — https://developer.apple.com/design/human-interface-guidelines/toolbars
+- Sliders — https://developer.apple.com/design/human-interface-guidelines/sliders
+
+Переносим в professional Qt desktop:
+- сначала purpose/user intent, затем visual/interface decisions;
+- большие desktop displays используются для большего объёма meaningful content с меньшим количеством nested levels/modality, но с комфортной плотностью;
+- segmented control — небольшая группа closely related choices/actions; не перегружать десятками сегментов;
+- на macOS main-area related pane switching ближе по семантике к tab view, а segmented control естественнее в toolbar/inspector;
+- tab view показывает связанные mutually-exclusive content panes и делает choices непосредственно видимыми;
+- popover подходит для небольшого набора временно нужных related controls и экономит постоянную площадь;
+- pop-up/combo — компактный выбор из flat mutually-exclusive options, когда все варианты не должны быть постоянно видны;
+- toolbar содержит deliberately chosen frequent commands, сгруппированные логически, а не весь feature catalog;
+- slider представляет реальный ordered min→max range; произвольные categories не превращаются в slider ради современного вида;
+- keyboard/pointer precision и familiar platform behavior сохраняются.
+
+Итоговая адаптация называется **Interaction Recomposition** в `dense-controls-and-selection`: группа controls сначала пересматривается как одна пользовательская операция, затем маппится на native Qt primitives. `Apple-like` не означает копировать Liquid Glass, capsules или whitespace.
 
 ## shadcn/ui — https://ui.shadcn.com
 
-Ключевая идея: composable, accessible components с thoughtful defaults, код которых принадлежит проекту и может быть изменён.
-
-Переносим в Qt:
-- shared primitive до локальной копии только когда повторяется именно контракт, а не внешний вид;
-- компонент имеет все состояния и единый API;
-- composition предпочтительнее огромных универсальных widgets;
-- design system — рабочий код и правила, а не отдельный макет.
+Переносим composable accessible primitives, shared component только при повторяемом contract, полный state API и design system как рабочий код. Не копируем React/Tailwind architecture в Qt.
 
 ## coss ui — https://coss.com/ui
 
-Полезна как современная таксономия primitives: autocomplete, combobox, command, context menu, drawer, field, input group, meter, number field, popover, progress, segmented control, skeleton, slider, spinner, tabs, toast, toggle group, toolbar.
-
-Переносим не визуальный стиль, а выбор правильного класса контрола. Например frequent binary/mode choice → segmented control; long searchable list → combobox/autocomplete; determinate async work → progress; unknown duration → spinner/skeleton.
+Полезна таксономия autocomplete/combobox/command/context menu/drawer/field/meter/popover/progress/segmented/slider/tabs/toast/toggle/toolbar. Переносим semantic control choice, но теперь option count считается ограничением, а не главным правилом.
 
 ## Design System Checklist — https://designsystemchecklist.com
 
-Проверены исходные checklist data проекта. Фундамент включает color semantics/accessibility/dark mode, layout units/grid/spacing, typography hierarchy/readability, elevation, motion easing/duration/reduced motion, icon semantics/naming/grid relation.
-
-Переносим:
-- единая шкала spacing (4-point/8-point family), а не случайные отступы;
-- semantic tokens вместо hardcoded colors;
-- состояния компонентов и keyboard behavior должны быть частью design system;
-- motion имеет общие duration/easing tokens;
-- иконка именуется и применяется по функции, не по геометрии.
+Переносим semantic colors, spacing rhythm, typography hierarchy, motion tokens, icon semantics, component states и keyboard behavior.
 
 ## Beautiful UI — https://beautifului.dev
 
-AI-native library показывает полезные компактные patterns: loading state с elapsed time, task rows с running/failed/completed, approval card, compact tool chips, recommendation confidence, records/filter tables.
-
-Для engineering/meteorology UI переносим:
-- длительная операция показывает, что именно выполняется;
-- статус размещается рядом с объектом/задачей, а не только глобальным spinner;
-- human-in-the-loop подтверждение должно показывать предмет решения;
-- compact rows/chips предпочтительнее больших «AI cards», когда действие вторично.
+Переносим локальный status рядом с объектом/задачей, понятный human-in-the-loop предмет решения и compact rows/chips вместо больших AI cards для вторичных действий.
 
 ## beUI — https://beui.dev
 
-Коллекция motion-first components: searchable multi-select, file tree с keyboard navigation, modal morphing, toast stack, command palette, expandable action bar, sliders, drawers, swipeable list.
-
-Переносим:
-- motion может объяснять изменение формы/контекста;
-- expandable controls помогают держать toolbar компактным;
-- searchable multi-select и keyboard navigation обязательны для больших списков;
-- drag/snap mechanics полезны там, где объект действительно перемещается.
-
-Не переносим decorative tilt/glare/bounce в частые operator workflows.
+Переносим searchable multi-select, keyboard navigation, expandable/contextual controls и drag/snap только там, где объект действительно перемещается. Decorative tilt/glare/bounce в operator workflows не переносим.
 
 ## Rare UI — https://rareui.com
 
-Небольшие single-file experimental components. Особенно полезен Duration Picker как interaction case: явный режим view → edit, autofocus, clamp invalid value, немедленная ошибка, отдельный confirm event.
-
-Переносим принцип stateful compact editing, но не gooey styling.
+Duration Picker полезен как case compact stateful editing: view → edit, autofocus, validation/clamp, immediate error, explicit confirm. Gooey styling не переносим.
 
 ## Transitions.dev — https://transitions.dev
 
-Каталог production transitions и agent skill. Сильная идея — иметь motion token scale и отдельные `review/refine/polish` этапы вместо ad-hoc durations/keyframes.
-
-Переносим:
-- именованные motion patterns/tokens;
-- происхождение анимации соответствует месту появления объекта;
-- open/close должны быть пространственно согласованы;
-- skeleton→content, spinner→check, state text swaps уместны только когда повышают понимание;
-- motion audit ищет hardcoded durations и разрозненные transitions.
+Переносим named motion tokens/patterns, origin-aware transitions и отдельный review/refine этап. Motion не должен задерживать готовый result.
 
 ## Emil Kowalski — You Don't Need Animations
 
 https://emilkowal.ski/ui/you-dont-need-animations
 
-Ключевые правила:
-- сначала purpose, затем animation;
-- частота использования критична;
-- high-frequency и keyboard-driven действия не анимировать;
-- UI animation обычно должна укладываться примерно в 300 ms или быстрее;
-- tooltip имеет initial delay, но переход между уже открытой группой tooltip должен быть мгновенным;
-- иногда лучшая анимация — отсутствие анимации.
+Переносим purpose-before-animation, frequency rule, отсутствие заметной animation на keyboard/high-frequency actions и идею, что иногда лучшая animation — её отсутствие.
 
 ## Enzo Manuel Mangano demos — https://github.com/enzomanuelmangano/demos
 
-Реальный набор React Native demos на Reanimated, Gesture Handler и Skia. Проверены gesture-driven slider/modal/wheel-picker patterns и использование haptics/press feedback.
-
-Переносим в desktop Qt:
-- direct manipulation должна следовать за pointer 1:1;
-- bounds/resistance/snap должны быть понятными и interruptible;
-- continuous gesture отделяется от commit event;
-- press/selection feedback следует действию немедленно;
-- gesture-only путь недопустим: нужна mouse/keyboard/button альтернатива;
-- haptics на мобильном переводится в ясный visual state change на desktop, а не в декоративный эффект.
+Переносим 1:1 direct manipulation, понятные bounds/resistance/snap, separation continuous preview vs commit и обязательную mouse/keyboard alternative на desktop.
 
 ## Общий запрет на cargo-cult
 
-Ни один источник не является готовым стилем продукта. Агент обязан сначала определить пользовательскую задачу, частоту действия, критичность ошибки, устройство ввода и плотность данных. Только после этого выбирается паттерн.
+Ни один источник не является готовым стилем продукта. Сначала user job, frequency, criticality, semantic axes, input devices, density и domain truth; только потом выбирается pattern.
