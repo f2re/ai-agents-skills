@@ -246,7 +246,20 @@ cmd_doctor(){
   "$ROOT/scripts/validate-skills.sh"
   bash -n "$ROOT/install.sh" "$ROOT/bin/ai-skills"
   local failed=0 path
-  for path in "$HOME/.agents/skills/skill-agent-orchestrator" "$HOME/.claude/skills/skill-agent-orchestrator" "$HOME/.gemini/config/skills/skill-agent-orchestrator"; do
+  for path in \
+    "$HOME/.agents/skills/skill-agent-orchestrator" \
+    "$HOME/.agents/skills/anti-slop-ui-direction" \
+    "$HOME/.claude/skills/skill-agent-orchestrator" \
+    "$HOME/.claude/skills/anti-slop-ui-direction" \
+    "$HOME/.gemini/config/skills/skill-agent-orchestrator" \
+    "$HOME/.gemini/config/skills/anti-slop-ui-direction" \
+    "$HOME/.codex/agents/ai-skills-orchestrator.toml" \
+    "$HOME/.codex/agents/ui-methodology-director.toml" \
+    "$HOME/.claude/agents/ai-skills-orchestrator.md" \
+    "$HOME/.claude/agents/ui-methodology-director.md" \
+    "$HOME/.gemini/config/agents/ai-skills-orchestrator/agent.md" \
+    "$HOME/.gemini/config/agents/ui-methodology-director/agent.md"
+  do
     if [[ ! -e "$path" ]]; then warn "missing registration: $path"; failed=1; fi
   done
   [[ $failed -eq 0 ]] || return 1

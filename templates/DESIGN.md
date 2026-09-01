@@ -8,6 +8,19 @@ This file stores stable product-level UI/UX decisions. It is not a dump of every
 - What are the 3–5 highest-frequency jobs?
 - Which actions are safety/time critical?
 
+## Design direction
+
+Record this section only when a substantial primary work surface has a durable accepted concept.
+
+- Defining operational idea:
+- Primary work object:
+- Supporting mechanism(s), if any:
+- Anti-slop/domain invariants:
+- Rejected generic defaults that must not reappear:
+- Non-goals:
+
+Do not store alternative brainstorming here. If the concept changes, add the new dated decision under `Decisions`.
+
 ## Information hierarchy
 
 - Primary work surface:

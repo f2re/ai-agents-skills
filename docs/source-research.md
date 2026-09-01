@@ -17,6 +17,26 @@
 
 Не переносим буквально web-only CSS/React рецепты.
 
+## TrueSpace Anti-Slop Design Director — https://truespaceai.ru/design/
+
+Источник полезен не своим poster style, а decision-making structure: перед генерацией создаются несколько разных по идее концепций, затем generic/template варианты отбрасываются, выбирается один defining mechanism, а готовый результат проверяется против исходной идеи.
+
+Переносим в professional UI:
+- `IDEA != STYLE` переводим в `UX/INFORMATION MECHANISM != LAYOUT/THEME`;
+- несколько концепций должны различаться organizing mechanism, а не palette/sidebar/cards;
+- genericity test: если предметную область можно заменить несвязанной и primary work surface остаётся естественной, концепция слишком шаблонная;
+- templateability test: primary surface не должна превращаться в другой продукт заменой labels/accent/data series;
+- mechanism library используется как prompts for reasoning, а не как готовые templates;
+- после реализации нужен regression check: defining idea может деградировать в generic component layout.
+
+Не переносим:
+- постерную visual school (гигантская типографика, risograph/print palette и т.п.) как default для профессионального desktop software;
+- абсолютные bans на отдельные визуальные приёмы без учёта задачи;
+- требование уникальности для стандартных dialogs/menus/combos/tables;
+- правило «не задавать design questions» как универсальное: для сложного engineering workflow недостающий operational fact иногда необходимо установить.
+
+Адаптация в этом репозитории — `anti-slop-ui-direction` + `ui-methodology-director`, работающие перед domain/Qt skills только для существенных design/redesign задач.
+
 ## shadcn/ui — https://ui.shadcn.com
 
 Ключевая идея: composable, accessible components с thoughtful defaults, код которых принадлежит проекту и может быть изменён.

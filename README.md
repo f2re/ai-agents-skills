@@ -2,7 +2,7 @@
 
 # AI Agents Skills
 
-**Progressive-disclosure skills and specialist agents for Codex, Claude Code and Google Antigravity**
+**Progressive-disclosure skills, Anti-Slop concept direction and specialist agents for Codex, Claude Code and Google Antigravity**
 
 [![Validate skills](https://github.com/f2re/ai-agents-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/f2re/ai-agents-skills/actions/workflows/validate-skills.yml)
 [![GitHub stars](https://img.shields.io/github/stars/f2re/ai-agents-skills?style=flat&logo=github)](https://github.com/f2re/ai-agents-skills/stargazers)
@@ -13,9 +13,9 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-ready-111827)
 ![Antigravity](https://img.shields.io/badge/Antigravity-ready-111827)
 
-A reusable engineering layer for coding agents: UI/UX contracts, Qt/C++ interface rules, meteorological workstation patterns, radar timelines, maps, scientific visualization, motion, direct manipulation and evidence-based review.
+A reusable engineering layer for coding agents: concept direction, UI/UX contracts, Qt/C++ rules, meteorological workstation patterns, radar timelines, maps, scientific visualization, motion, direct manipulation and evidence-based acceptance.
 
-[Install](#-one-command-install) · [Routing](#-how-orchestration-works) · [Skills](#-skill-catalog) · [Agents](#-specialist-agents) · [Project integration](#-project-integration) · [Architecture](#-architecture)
+[Install](#-one-command-install) · [Routing](#-how-orchestration-works) · [Anti-Slop](#-anti-slop-methodology) · [Skills](#-skill-catalog) · [Agents](#-specialist-agents) · [Architecture](#-architecture)
 
 </div>
 
@@ -23,11 +23,15 @@ A reusable engineering layer for coding agents: UI/UX contracts, Qt/C++ interfac
 
 ## Why this exists
 
-Coding agents often know how to produce a component, but not **when that component belongs in the user's workflow**. They also tend to over-load context with broad design instructions, overuse cards and dropdowns, hide state changes, animate frequent actions, and treat professional operator software like a marketing page.
+Coding agents often know how to produce components but not **what interaction concept should organize the user's work**. They tend to jump from a vague request like “make it professional” directly to cards, sidebars, gradients, dropdowns and generic plots. The result can be clean and still be interchangeable with a finance/SaaS dashboard.
 
-This repository turns UI/UX judgment into inspectable engineering rules. A task is routed from **user intent → interaction contract → relevant skills → optional specialist agent → implementation → acceptance audit**. Skills are discovered by name and description first; their full instructions are loaded only when relevant.
+This repository turns UI/UX judgment into inspectable engineering rules. Material design work follows:
 
-The current catalog is especially detailed for **native Qt/C++ meteorological software**: radar/satellite time navigation, forecast cycles, map LOD, asynchronous data loading, scientific plots, uncertainty, keyboard-first operation and dense-but-readable professional layouts.
+**user intent → concept gate → focused skills → optional specialist agents → implementation → anti-slop regression → acceptance audit**.
+
+Skills are discovered by name and description first; their full instructions and optional references are loaded only when relevant. A small fix does not pay the cost of a full design ceremony.
+
+The current catalog is especially detailed for **native Qt/C++ meteorological software**: radar/satellite time navigation, forecast cycles, map LOD, asynchronous data loading, Qwt/scientific plots, uncertainty, keyboard-first operation and dense-but-readable professional layouts.
 
 ## ⚡ One-command install
 
@@ -37,20 +41,15 @@ curl -fsSL https://raw.githubusercontent.com/f2re/ai-agents-skills/main/install.
 
 No `sudo` is required. The bootstrap downloads one managed source copy, installs the `ai-skills` CLI, registers global skills and specialist agents, and adds a small managed orchestration block to each supported coding-agent environment.
 
-Then verify:
+Then verify and integrate a project:
 
 ```bash
 ai-skills doctor
 ai-skills status
-```
-
-Integrate the current repository as well:
-
-```bash
 ai-skills project .
 ```
 
-Or do both in one command:
+Or install + integrate in one command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/f2re/ai-agents-skills/main/install.sh | bash -s -- --project .
@@ -59,13 +58,11 @@ curl -fsSL https://raw.githubusercontent.com/f2re/ai-agents-skills/main/install.
 <details>
 <summary><strong>Team / vendored mode</strong></summary>
 
-For a repository that should carry its own skills and agents in Git:
-
 ```bash
 ai-skills project . --vendor
 ```
 
-This copies the skill catalog into project-scoped locations instead of depending only on the developer's global installation. Existing non-managed files are not overwritten.
+This copies the skill catalog into project-scoped locations so teammates/CI receive the same corpus from Git. Existing non-managed files are not overwritten.
 
 </details>
 
@@ -83,92 +80,114 @@ ai-skills uninstall
 
 ## 🧠 How orchestration works
 
-The central rule is **progressive disclosure, not prompt dumping**. The main coding agent can see catalog metadata, but it does not read every `SKILL.md` and does not spawn every specialist.
+The central rule is **progressive disclosure, not prompt dumping**. Anti-slop is also progressive: it runs only when the product concept is actually changing.
 
 ```mermaid
 flowchart LR
     U[User task] --> C[Compact global/project rules]
     C --> Q{UI/UX or interaction work?}
-    Q -- No --> M[Main coding agent<br/>works normally]
-    Q -- Yes --> R[skill-agent-orchestrator]
-    R --> I[Classify intent / stack / domain]
-    I --> S[Select smallest skill set]
-    I --> D{Independent specialist work useful?}
-    D -- No --> M2[Main agent + selected skills]
-    D -- Yes --> A[1-4 focused specialist agents]
-    A --> X[Synthesize evidence and decisions]
-    M2 --> X
+    Q -- No --> M[Main coding agent]
+    Q -- Yes --> R[skill-agent-orchestrator / ui-skill-router]
+    R --> G{Substantial concept change<br/>or generic-AI complaint?}
+    G -- Yes --> D[UI Methodology Director<br/>anti-slop-ui-direction]
+    D --> DC[Design Direction Contract]
+    G -- No --> S[Select smallest skill set]
+    DC --> S
+    S --> A{Independent specialist work useful?}
+    A -- No --> I[Main agent + selected skills]
+    A -- Yes --> SP[1-4 bounded specialists]
+    SP --> X[Synthesize one decision]
+    I --> X
     X --> V[Implement + validate]
-    V --> AU[ui-audit-and-acceptance]
+    V --> RG[Anti-slop regression<br/>when contract applies]
+    RG --> AU[ui-audit-and-acceptance]
 ```
 
 Routing rules:
 
 - a small or obvious edit stays with the main agent;
 - a single concern activates one focused skill;
-- a medium task may use one specialist;
-- a complex task may use 2–4 **independent** specialists, especially for read-heavy analysis;
+- a substantial primary work-surface/information/navigation/visualization redesign runs the concept gate first;
+- “looks generic / AI-generated / dashboard-like / slop” is treated as a conceptual signal, not a request to merely change colors or radii;
+- the methodology director is normally sequential; downstream implementation specialists share one accepted concept;
+- complex work may use 2–4 **independent** specialists, especially for read-heavy analysis;
 - overlapping write-heavy agents are avoided;
-- specialists return evidence and bounded recommendations; the parent agent owns integration;
-- `DESIGN.md` is consulted for relevant product/UI work, not automatically injected into unrelated backend tasks.
+- `DESIGN.md` is consulted only for relevant product/UI work.
 
-This preserves context for the actual code while still giving the agent deep design guidance when it matters.
+## 🧭 Anti-Slop methodology
+
+Anti-slop here is **not a visual style**. It is a rejection and handoff system.
+
+Before implementation of a substantial surface, `anti-slop-ui-direction`:
+
+1. states the user's operational question and primary work object;
+2. creates three concepts that differ in interaction/information mechanism, not theme/layout;
+3. runs four tests: **genericity**, **templateability**, **domain truth**, **implementation reality**;
+4. selects one defining mechanism plus at most one or two supports;
+5. emits a compact **Design Direction Contract** with invariants, non-goals and downstream routing.
+
+Examples of mechanisms for meteorological software include `TIME IS THE SPINE`, `ATMOSPHERIC COLUMN IS THE OBJECT`, `MODEL DISAGREEMENT IS DATA`, `FACT → NOW → FORECAST`, `MAP ↔ PLOT COUPLING` and `LINKED INSPECTION`.
+
+The genericity test is scoped deliberately. A normal `QDialog`, `QTableView`, toolbar or combo box may remain conventional. The test targets the **primary work surface and organizing logic**: if temperature/model/station data can be relabeled as revenue/region/customer and the same main screen still makes equal sense, the product concept is probably generic.
+
+Constraints are classified as `FORBIDDEN`, `REJECT BY DEFAULT` and `ALLOW WITH JUSTIFICATION`; cards/animation/gradients are not cargo-cult bans.
+
+See [`docs/anti-slop-methodology.md`](docs/anti-slop-methodology.md) and the optional reference corpus under [`anti-slop-ui-direction/references`](.agents/skills/anti-slop-ui-direction/references/).
 
 ## 🧩 Skill catalog
 
-Every skill contains explicit **when-to-use rules, patterns, anti-patterns and acceptance criteria**. Click a skill to inspect the full instructions.
+Every skill contains explicit when-to-use rules, patterns, anti-patterns and acceptance criteria.
 
 | Area | Skill | What it does |
 |---|---|---|
-| Routing | [`skill-agent-orchestrator`](.agents/skills/skill-agent-orchestrator/SKILL.md) | Chooses the smallest relevant skill set and decides whether specialist delegation is justified. |
-| Routing | [`ui-skill-router`](.agents/skills/ui-skill-router/SKILL.md) | Routes focused UI tasks without loading the whole UI catalog. |
-| Evidence | [`design-evidence-and-intent`](.agents/skills/design-evidence-and-intent/SKILL.md) | Separates observed evidence, user intent, product constraints and subjective preference. |
-| Flow | [`interaction-contracts-and-flow`](.agents/skills/interaction-contracts-and-flow/SKILL.md) | Audits `intent → trigger → feedback → pending → result → recovery → next action`. |
-| Hierarchy | [`information-hierarchy-and-density`](.agents/skills/information-hierarchy-and-density/SKILL.md) | Controls visual hierarchy, grouping, spacing, density and progressive disclosure. |
-| Qt/C++ | [`qt-cpp-design-system`](.agents/skills/qt-cpp-design-system/SKILL.md) | Maps design-system principles to native Qt Widgets/QML/C++ primitives and tokens. |
-| Controls | [`dense-controls-and-selection`](.agents/skills/dense-controls-and-selection/SKILL.md) | Correct use of combo/search/multi-select/segmented controls, filters and compact toolbars. |
-| Workflows | [`workflow-and-progressive-disclosure`](.agents/skills/workflow-and-progressive-disclosure/SKILL.md) | Wizards, import/review flows, adaptive disclosure and complex multi-step tasks. |
-| States | [`states-errors-and-recovery`](.agents/skills/states-errors-and-recovery/SKILL.md) | Loading, empty, stale, partial, error, retry, cancellation and recovery behavior. |
-| Safety | [`operator-accessibility-and-safety`](.agents/skills/operator-accessibility-and-safety/SKILL.md) | Keyboard/focus, contrast, non-color cues and protection from operator mistakes. |
-| Meteorology | [`meteorologist-workstation-ux`](.agents/skills/meteorologist-workstation-ux/SKILL.md) | Structures a meteorologist workstation around valid time, cycle, model, source and uncertainty. |
-| Radar | [`radar-timeline-and-playback`](.agents/skills/radar-timeline-and-playback/SKILL.md) | Compact radar/satellite/nowcast timeline with exact timestamps, per-frame loading and playback. |
-| Time | [`time-data-navigation`](.agents/skills/time-data-navigation/SKILL.md) | Forecast cycles, valid-time navigation, adaptive stepping and temporal context preservation. |
-| Maps | [`viewport-map-interactions`](.agents/skills/viewport-map-interactions/SKILL.md) | Predictable map zoom/pan, semantic LOD, request coalescing and context-preserving navigation. |
-| Plots | [`meteorological-visualization`](.agents/skills/meteorological-visualization/SKILL.md) | Scientific plots, crosshair, units, ensembles, aerology and uncertainty. |
-| Motion | [`motion-feedback-and-microinteractions`](.agents/skills/motion-feedback-and-microinteractions/SKILL.md) | Purpose/frequency-first motion, duration/easing, feedback and interruptibility. |
-| Gestures | [`gesture-and-direct-manipulation`](.agents/skills/gesture-and-direct-manipulation/SKILL.md) | Mouse, wheel, trackpad, drag/swipe, snap/bounds and direct-manipulation semantics. |
-| Acceptance | [`ui-audit-and-acceptance`](.agents/skills/ui-audit-and-acceptance/SKILL.md) | Final evidence-based UI/UX acceptance audit with prioritized findings. |
+| Routing | [`skill-agent-orchestrator`](.agents/skills/skill-agent-orchestrator/SKILL.md) | Chooses the smallest relevant skill set and optional specialists. |
+| Routing | [`ui-skill-router`](.agents/skills/ui-skill-router/SKILL.md) | Routes focused UI tasks without loading the full catalog. |
+| Concept | [`anti-slop-ui-direction`](.agents/skills/anti-slop-ui-direction/SKILL.md) | Concept gate, rejection tests, Design Direction Contract and regression rules. |
+| Evidence | [`design-evidence-and-intent`](.agents/skills/design-evidence-and-intent/SKILL.md) | Separates observed evidence, intent, constraints and preference. |
+| Flow | [`interaction-contracts-and-flow`](.agents/skills/interaction-contracts-and-flow/SKILL.md) | `intent → trigger → feedback → pending → result → recovery → next action`. |
+| Hierarchy | [`information-hierarchy-and-density`](.agents/skills/information-hierarchy-and-density/SKILL.md) | Grouping, spacing, density, hierarchy and progressive disclosure. |
+| Qt/C++ | [`qt-cpp-design-system`](.agents/skills/qt-cpp-design-system/SKILL.md) | Native Qt Widgets/QML/C++ design-system rules. |
+| Controls | [`dense-controls-and-selection`](.agents/skills/dense-controls-and-selection/SKILL.md) | Combo/search/multi-select/segmented controls and compact toolbars. |
+| Workflows | [`workflow-and-progressive-disclosure`](.agents/skills/workflow-and-progressive-disclosure/SKILL.md) | Wizards, import/review flows and staged disclosure. |
+| States | [`states-errors-and-recovery`](.agents/skills/states-errors-and-recovery/SKILL.md) | Loading, empty, stale, partial, error, retry and cancel. |
+| Safety | [`operator-accessibility-and-safety`](.agents/skills/operator-accessibility-and-safety/SKILL.md) | Keyboard/focus, non-color cues and operator safety. |
+| Meteorology | [`meteorologist-workstation-ux`](.agents/skills/meteorologist-workstation-ux/SKILL.md) | Workstation semantics around time, model, source and uncertainty. |
+| Radar | [`radar-timeline-and-playback`](.agents/skills/radar-timeline-and-playback/SKILL.md) | Compact radar/satellite/nowcast timeline and per-frame states. |
+| Time | [`time-data-navigation`](.agents/skills/time-data-navigation/SKILL.md) | Forecast cycles, valid-time navigation and temporal context. |
+| Maps | [`viewport-map-interactions`](.agents/skills/viewport-map-interactions/SKILL.md) | Predictable zoom/pan, semantic LOD and request behavior. |
+| Plots | [`meteorological-visualization`](.agents/skills/meteorological-visualization/SKILL.md) | Scientific plots, crosshair, ensembles, aerology and uncertainty. |
+| Motion | [`motion-feedback-and-microinteractions`](.agents/skills/motion-feedback-and-microinteractions/SKILL.md) | Purpose/frequency-first motion and interruptibility. |
+| Gestures | [`gesture-and-direct-manipulation`](.agents/skills/gesture-and-direct-manipulation/SKILL.md) | Mouse/trackpad/wheel/drag/snap semantics. |
+| Acceptance | [`ui-audit-and-acceptance`](.agents/skills/ui-audit-and-acceptance/SKILL.md) | Final evidence-based audit plus concept-regression gate. |
 
-### Example: radar timeline contract
+### Example: SLOP → DECENT → PROFESSIONAL radar timeline
 
-The radar timeline skill treats the timeline as an **operator navigation primitive**, not a decorative chart:
+**SLOP:** generic slider + global spinner + observed/forecast frames that look identical.
 
-```text
-[◀]  18:10  18:20  18:30  18:40  18:50  [19:00]  19:10  19:20  [▶]
-                                              ↑ selected / loading locally
-```
+**DECENT:** compact exact timestamps, play/pause and local loading.
 
-It stays compact, labels valid times explicitly, preserves temporal gaps, distinguishes fact/nowcast/forecast, keeps the last valid frame visible while another term loads, cancels stale requests, prefetches adjacent frames and provides keyboard/playback paths.
+**PROFESSIONAL:** `FACT → NOW → FORECAST` is the defining mechanism; provenance is part of the timeline, every frame carries loaded/pending/missing state, the last valid map stays visible during refresh, gaps remain honest and keyboard stepping is immediate.
 
-See [`radar-timeline-and-playback`](.agents/skills/radar-timeline-and-playback/SKILL.md).
+See [`radar-timeline-and-playback`](.agents/skills/radar-timeline-and-playback/SKILL.md) and the anti-slop [`radar-timeline` reference](.agents/skills/anti-slop-ui-direction/references/examples/radar-timeline.md).
 
 ## 🤖 Specialist agents
 
-Specialists are **compositions**, not a second copy of the skill corpus. Their descriptions make them discoverable; they activate only relevant skills while working.
+Specialists are **compositions**, not copies of the whole skill corpus.
 
 | Agent | Best used for | Definition |
 |---|---|---|
-| **AI Skills Orchestrator** | Multi-area UI/UX tasks; chooses specialists and integrates results | [`agents/ai-skills-orchestrator.md`](agents/ai-skills-orchestrator.md) |
+| **AI Skills Orchestrator** | Multi-area work; routing, delegation and synthesis | [`agents/ai-skills-orchestrator.md`](agents/ai-skills-orchestrator.md) |
+| **UI Methodology Director** | Substantial concept direction, anti-slop tests, Design Direction Contract | [`agents/ui-methodology-director.md`](agents/ui-methodology-director.md) |
 | **UI/UX Auditor** | Existing-interface evidence, click tax, states, hierarchy and acceptance | [`agents/ui-ux-auditor.md`](agents/ui-ux-auditor.md) |
-| **Qt Interface Designer** | Native Qt/C++ architecture, controls, density and interaction implementation | [`agents/qt-interface-designer.md`](agents/qt-interface-designer.md) |
-| **Meteo Workstation Designer** | Radar, satellite, forecast cycles, maps, timelines and scientific visualization | [`agents/meteo-workstation-designer.md`](agents/meteo-workstation-designer.md) |
-| **Motion Interaction Reviewer** | Gesture semantics, motion purpose, frequency and interruption | [`agents/motion-interaction-reviewer.md`](agents/motion-interaction-reviewer.md) |
+| **Qt Interface Designer** | Native Qt/C++ architecture and implementation | [`agents/qt-interface-designer.md`](agents/qt-interface-designer.md) |
+| **Meteo Workstation Designer** | Radar, forecast cycles, maps, timelines and scientific visualization | [`agents/meteo-workstation-designer.md`](agents/meteo-workstation-designer.md) |
+| **Motion Interaction Reviewer** | Gesture semantics, motion purpose/frequency/interruption | [`agents/motion-interaction-reviewer.md`](agents/motion-interaction-reviewer.md) |
 
 Native registration templates live under [`integrations/`](integrations/).
 
 ## 🔌 Platform registration
 
-`ai-skills global` registers the same source catalog through the native discovery mechanisms of each tool.
+`ai-skills global` registers the same source catalog through native discovery mechanisms.
 
 | Platform | Global skills | Global agents | Compact global rules |
 |---|---|---|---|
@@ -176,76 +195,72 @@ Native registration templates live under [`integrations/`](integrations/).
 | **Claude Code** | `~/.claude/skills/` | `~/.claude/agents/*.md` | `~/.claude/CLAUDE.md` |
 | **Antigravity** | `~/.gemini/config/skills/` plus compatibility links | `~/.gemini/config/agents/<name>/agent.md` | `~/.gemini/GEMINI.md` |
 
-The install source is kept once under `~/.local/share/ai-agents-skills` by default and supported global skill locations point to it with symlinks. This avoids maintaining divergent copies.
+The source is kept once under `~/.local/share/ai-agents-skills` by default and supported global skill locations point to it with symlinks.
 
-> Antigravity documentation currently exposes different global skill locations for different surfaces/releases (`~/.gemini/config/skills`, `~/.gemini/antigravity/skills`, and `~/.gemini/antigravity-cli/skills`). The installer registers compatibility links for all documented variants while workspace integration uses the stable `.agents/skills` convention.
+> Antigravity currently exposes several skill locations across surfaces/releases. Registration covers `~/.gemini/config/skills`, `~/.gemini/antigravity/skills`, and `~/.gemini/antigravity-cli/skills`; workspace integration uses `.agents/skills`.
 
-See [installation and registration details](docs/installation-and-registration.md).
+See [`docs/installation-and-registration.md`](docs/installation-and-registration.md).
 
 ## 🏗️ Project integration
-
-Running:
 
 ```bash
 ai-skills project .
 ```
 
-adds/updates only a marked AI Agents Skills block in project instruction files and installs platform-specific agent definitions:
+adds/updates only marked AI Agents Skills blocks and platform agent definitions:
 
 ```text
 project/
-├── AGENTS.md                  # Codex / shared project rules
-├── CLAUDE.md                  # Claude Code project rules
-├── GEMINI.md                  # Antigravity project rules
-├── DESIGN.md                  # product/UI interaction contract
-├── .codex/agents/             # Codex specialists
-├── .claude/agents/            # Claude specialists
-└── .agents/agents/            # Antigravity specialists
+├── AGENTS.md
+├── CLAUDE.md
+├── GEMINI.md
+├── DESIGN.md
+├── .codex/agents/
+├── .claude/agents/
+└── .agents/agents/
 ```
 
-With `--vendor`, project-scoped skills are also copied into `.agents/skills/` and `.claude/skills/` so the repository is self-contained for the team.
+With `--vendor`, project-scoped skills are also copied into `.agents/skills/` and `.claude/skills/`.
 
-### What goes into `DESIGN.md`?
+### What belongs in `DESIGN.md`?
 
-Not a giant style prompt. It records durable project-specific facts that generic skills cannot know:
+Not a giant style prompt. It records durable project facts:
 
-- primary users and high-frequency jobs;
+- users and high-frequency jobs;
+- accepted **defining operational idea** and primary work object for major work surfaces;
+- anti-slop/domain invariants and non-goals;
 - information hierarchy and always-visible context;
-- interaction contracts for core actions;
+- interaction contracts;
 - loading/stale/partial/error behavior;
 - keyboard/navigation decisions;
 - motion constraints;
 - domain semantics such as units, valid time, source/model/cycle;
 - dated product decisions and explicit exceptions.
 
-The orchestrator reads it only when the current work actually involves interface behavior or product design.
+Rejected concept brainstorming stays out of project memory.
 
 ## 🗺️ Architecture
 
 ```mermaid
 flowchart TB
     SRC[ai-agents-skills<br/>canonical source]
-
-    SRC --> SK[18 focused SKILL.md packages]
-    SRC --> AG[5 specialist agent profiles]
+    SRC --> SK[19 focused SKILL.md packages]
+    SRC --> AG[6 agent profiles]
     SRC --> RT[compact routing instructions]
     SRC --> CLI[ai-skills CLI]
+
+    RT --> ORCH[AI Skills Orchestrator]
+    ORCH --> CG{Concept gate needed?}
+    CG -- yes --> DIR[UI Methodology Director]
+    DIR --> CONTRACT[Design Direction Contract]
+    CG -- no --> SEL[Focused skill routing]
+    CONTRACT --> SEL
+    SEL --> DOMAIN[Qt / Meteo / Motion / Audit]
+    DOMAIN --> ACCEPT[Anti-slop regression + acceptance]
 
     CLI --> CX[Codex]
     CLI --> CL[Claude Code]
     CLI --> AN[Antigravity]
-
-    SK --> CXSK[~/.agents/skills]
-    SK --> CLSK[~/.claude/skills]
-    SK --> ANSK[~/.gemini/.../skills]
-
-    AG --> CXAG[~/.codex/agents]
-    AG --> CLAG[~/.claude/agents]
-    AG --> ANAG[~/.gemini/config/agents]
-
-    RT --> RULES[AGENTS.md / CLAUDE.md / GEMINI.md]
-    RULES --> ORCH[Task-aware routing]
-    ORCH --> SEL[Only relevant skills + specialists]
 ```
 
 ### Context strategy
@@ -254,43 +269,43 @@ flowchart TB
 sequenceDiagram
     participant U as User
     participant P as Parent agent
-    participant R as Router
-    participant S as Skill
-    participant A as Specialist
+    participant D as Methodology director
+    participant S as Focused skills
+    participant I as Implementation specialist
 
-    U->>P: Improve radar time navigation
-    P->>R: classify task
-    R-->>P: radar timeline + time navigation + states
-    P->>S: load selected skill instructions
-    opt independent UX analysis helps
-        P->>A: delegate bounded meteo UX review
-        A-->>P: evidence + recommendations
-    end
-    P->>P: synthesize and implement
-    P->>S: run acceptance audit
+    U->>P: Redesign model comparison; it looks like AI dashboard
+    P->>D: bounded concept question
+    D-->>P: Design Direction Contract: MODEL DISAGREEMENT IS DATA
+    P->>S: load meteo visualization + time + Qt rules only
+    P->>I: implement contract and invariants
+    I-->>P: patch / implementation evidence
+    P->>S: anti-slop regression + ui-audit-and-acceptance
     P-->>U: one coherent result
 ```
 
 ## 🚫 Core anti-patterns
 
-The system explicitly rejects patterns coding agents commonly produce without design supervision:
+The system rejects both interaction defects and common design-process failures:
 
-- loading every skill into context “just in case”;
+- loading every skill “just in case”;
+- one giant designer prompt for every UI task;
 - spawning specialists for trivial edits;
+- calling palette/sidebar/card choices a “concept”;
+- generating three cosmetically different versions of the same architecture;
+- solving “generic AI dashboard” complaints with only borders, colors, radii or typography;
+- forcing novelty into standard Qt dialogs/controls;
 - using a dropdown for a frequent binary switch;
-- hiding high-frequency actions behind two or more clicks;
-- turning every group into a large card;
-- permanent panels for secondary/rare controls;
-- global spinners for a local asynchronous operation;
-- blanking a radar/map view while the next term loads;
-- showing “Loading…” without identifying which data/time is pending;
-- collapsing missing timestamps and therefore falsifying temporal continuity;
-- using internal model IDs/centers when the operator needs human-readable semantics;
-- animating repeated keyboard/time navigation and adding interaction latency;
-- changing map scale, time and product semantics in one ambiguous gesture;
+- hiding high-frequency actions behind unnecessary clicks;
+- permanent panels for rare controls;
+- global spinners for local asynchronous work;
+- blanking valid radar/map data during refresh;
+- collapsing missing timestamps and falsifying continuity;
+- exposing internal model IDs instead of operator semantics;
+- animating repeated keyboard/time navigation;
+- letting implementation silently erase an accepted Design Direction Contract;
 - reporting raw specialist outputs instead of one integrated decision.
 
-The growing registry is in [`docs/patterns-and-antipatterns.md`](docs/patterns-and-antipatterns.md).
+See [`docs/patterns-and-antipatterns.md`](docs/patterns-and-antipatterns.md).
 
 ## 🛠️ CLI
 
@@ -298,32 +313,32 @@ The growing registry is in [`docs/patterns-and-antipatterns.md`](docs/patterns-a
 |---|---|
 | `ai-skills global` | Register global skills, agents and compact orchestration rules. |
 | `ai-skills project [path]` | Add project routing + specialists + `DESIGN.md`. |
-| `ai-skills project [path] --vendor` | Also copy skills into project-scoped discovery directories. |
-| `ai-skills list skills` | Show skill names/descriptions without opening the bodies. |
-| `ai-skills list agents` | Show specialist agent names/descriptions. |
+| `ai-skills project [path] --vendor` | Also copy skills into project discovery directories. |
+| `ai-skills list skills` | Show skill metadata without opening bodies. |
+| `ai-skills list agents` | Show specialist agent metadata. |
 | `ai-skills status` | Show source and registration locations. |
-| `ai-skills doctor` | Validate the skill corpus and installed registrations. |
+| `ai-skills doctor` | Validate corpus and installed registrations. |
 | `ai-skills update` | Refresh from `main` and re-register. |
-| `ai-skills uninstall` | Remove managed registrations without touching unrelated user content. |
-
-See [`docs/orchestration.md`](docs/orchestration.md) for the routing/delegation model.
+| `ai-skills uninstall` | Remove managed registrations safely. |
 
 ## 📚 Research basis
 
-The rules are distilled from current coding-agent conventions and design-engineering references rather than copied visual components. Research notes and adaptation decisions are documented in [`docs/source-research.md`](docs/source-research.md).
+Rules are distilled from coding-agent conventions and design-engineering references rather than copied visual components. The Anti-Slop layer adapts TrueSpace's decision-system idea — multiple idea-level concepts, generic/template rejection and a defining mechanism — while explicitly **not** importing its poster visual style into professional desktop UI.
 
-Key sources include shadcn/ui, coss, Design System Checklist, Beautiful UI, beUI, Rare UI, Transitions.dev, Emil Kowalski's interaction writing, ui-skills.com and Enzo Mangano's gesture/animation demos.
+Research notes: [`docs/source-research.md`](docs/source-research.md).
 
 ## ✅ Validation
 
-Every change is checked by GitHub Actions. CI validates:
+GitHub Actions checks:
 
 - skill YAML frontmatter and directory/name consistency;
 - explicit anti-pattern coverage;
-- bootstrap and CLI shell syntax;
-- platform agent template structure;
-- a sandboxed global registration smoke test;
-- a sandboxed project-integration smoke test.
+- shell syntax;
+- all 6 platform agent templates;
+- anti-slop skill registration across Codex/Claude/Antigravity;
+- methodology-director global and project registration;
+- sandboxed global/project/vendored installation;
+- managed-block idempotence.
 
 Run locally:
 
@@ -334,7 +349,7 @@ bash scripts/validate-package.sh
 
 ## ⭐ Star history
 
-If this catalog helps your agents produce less generic and more operationally correct interfaces, a star makes the project easier to discover.
+If this catalog helps agents produce less generic and more operationally correct interfaces, a star makes the project easier to discover.
 
 [![Star History Chart](https://api.star-history.com/svg?repos=f2re/ai-agents-skills&type=Date)](https://star-history.com/#f2re/ai-agents-skills&Date)
 
@@ -342,6 +357,6 @@ If this catalog helps your agents produce less generic and more operationally co
 
 <div align="center">
 
-**Build interfaces from user intent, not from component autocomplete.**
+**Build interfaces from user intent and domain mechanisms, not from component autocomplete.**
 
 </div>

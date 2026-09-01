@@ -14,3 +14,5 @@
 8. Метеорологические данные всегда должны иметь явную временную семантику, источник/модель/цикл, статус свежести и состояние загрузки.
 9. Если интерфейс меняет данные вследствие zoom/time/navigation, сохранять пространственный и временной контекст, отменять устаревшие запросы и не блокировать уже доступные данные.
 10. Любой новый skill должен быть добавлен в `.agents/skills/README.md` и при необходимости в agent compositions.
+11. Существенный новый/redesigned primary UI surface должен пройти concept gate (`anti-slop-ui-direction`) до implementation routing; не применять этот ритуал к локальным правкам с уже определённым interaction concept.
+12. Anti-slop — decision system, не визуальный стиль: genericity/templateability tests применяются к organizing logic и primary work surface, а не для изобретения нестандартных замен обычным Qt controls.

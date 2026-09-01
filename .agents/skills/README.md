@@ -2,12 +2,13 @@
 
 The catalog is intentionally split into focused skills so Codex, Claude Code and Antigravity can use progressive disclosure instead of loading one monolithic design prompt.
 
-## Orchestration
+## Orchestration and concept direction
 
 - [`skill-agent-orchestrator`](skill-agent-orchestrator/SKILL.md) — top-level routing for complex multi-area tasks; chooses skills and optional specialist agents.
 - [`ui-skill-router`](ui-skill-router/SKILL.md) — lightweight routing for focused UI tasks.
+- [`anti-slop-ui-direction`](anti-slop-ui-direction/SKILL.md) — concept gate for substantial new/redesigned work surfaces; derives a domain-specific defining mechanism, rejects generic/template defaults and hands implementation a Design Direction Contract.
 - [`design-evidence-and-intent`](design-evidence-and-intent/SKILL.md) — establishes evidence, user intent and interaction contract before redesign.
-- [`ui-audit-and-acceptance`](ui-audit-and-acceptance/SKILL.md) — final behavior/design audit and acceptance criteria.
+- [`ui-audit-and-acceptance`](ui-audit-and-acceptance/SKILL.md) — final behavior/design audit, anti-slop regression check and acceptance criteria.
 
 ## Base interface engineering
 
@@ -35,3 +36,5 @@ The catalog is intentionally split into focused skills so Codex, Claude Code and
 ## Routing rule
 
 Do not load this catalog wholesale. Start from task intent and descriptions. Use `skill-agent-orchestrator` for complex multi-area work or `ui-skill-router` for a focused UI task, then activate only the smallest relevant set.
+
+For a substantial new/redesigned primary surface, run `anti-slop-ui-direction` before downstream implementation. For a local fix whose interaction concept is already settled, skip the ceremony.

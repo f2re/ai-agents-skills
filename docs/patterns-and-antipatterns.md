@@ -49,3 +49,13 @@
 ### Empty whitespace as pseudo-premium design
 
 Профессиональный desktop UI не должен копировать mobile/marketing spacing. Воздух нужен для группировки, но значимая информация должна помещаться в рабочий viewport без постоянного скролла.
+
+### Generic template as product concept
+
+Чистая сетка, аккуратные карточки и хорошая типографика могут дать DECENT интерфейс, но не являются interaction concept. Для существенной primary work surface необходимо проверить, отражает ли organizing logic реальную предметную работу. Если после замены метеопараметров на продажи/конверсию/регионы тот же экран остаётся столь же естественным, концепция слишком generic.
+
+Это правило не применяется к обычным dialog/menu/table/combo/toolbar: стандартный control не обязан быть уникальным.
+
+### Anti-slop as cargo-cult
+
+Антислоп не означает «запретить все cards/animation/gradients». Правила делятся на correctness/safety запреты, defaults-to-reject и patterns allowed with justification. Если агент начинает изобретать необычный control только ради непохожести на шаблон, методология используется неправильно.
