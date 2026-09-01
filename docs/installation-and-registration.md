@@ -10,7 +10,7 @@ The bootstrap keeps one managed source copy under `${XDG_DATA_HOME:-~/.local/sha
 
 No root privileges are required.
 
-## Supported registrations
+## Supported global registrations
 
 ### Codex
 
@@ -20,7 +20,7 @@ No root privileges are required.
 - project agents: `.codex/agents/*.toml`
 - project/shared skills: `.agents/skills/<skill>/`
 
-Codex discovers skill metadata first and reads the full `SKILL.md` when it selects the skill. The repository therefore keeps descriptions specific enough for routing and avoids one monolithic design skill.
+Codex discovers skill metadata first and reads the full `SKILL.md` when selected. Existing-project integration therefore relies on native project discovery and does not rewrite repository `AGENTS.md` by default.
 
 ### Claude Code
 
@@ -30,7 +30,9 @@ Codex discovers skill metadata first and reads the full `SKILL.md` when it selec
 - project skills in vendor mode: `.claude/skills/<skill>/`
 - project subagents: `.claude/agents/*.md`
 
-Specialist definitions intentionally do not use the `skills:` preload field. They identify a narrow domain and let Claude discover/invoke the focused skill during execution, which avoids injecting several full skill bodies at subagent startup.
+Specialist definitions intentionally do not use the `skills:` preload field. They identify a narrow domain and let Claude discover/invoke focused skills during execution.
+
+Project integration does not rewrite `CLAUDE.md` by default. If semantic integration is useful, the Project Integration Architect decides whether a small compatible edit or path-scoped `.claude/rules` is appropriate.
 
 ### Google Antigravity
 
@@ -42,35 +44,73 @@ Specialist definitions intentionally do not use the `skills:` preload field. The
 - project skills: `.agents/skills/<skill>/`
 - project agents: `.agents/agents/<agent>/agent.md`
 
-Google documentation currently exposes more than one global skill path across Antigravity surfaces. Registration covers the documented variants; project-scoped installation uses `.agents/skills`.
+Project integration does not rewrite `GEMINI.md` by default. Antigravity can use native project skills/agents and scoped `.agents/rules` when additional routing is needed.
 
-## Safety and idempotence
+## Safety model
 
-The CLI owns only:
+### Global installation
 
-- symlinks that resolve to its managed source directory;
-- managed specialist-agent copies marked by this package;
-- text between `<!-- ai-agents-skills:begin -->` and `<!-- ai-agents-skills:end -->` markers.
+The CLI owns only symlinks to its managed source and text inside its managed global instruction markers.
 
-An existing unrelated normal file, directory or external symlink with the same skill/agent name is not overwritten. This is intentional: user/company configuration wins over a convenience installer.
+### Existing-project integration
 
-## Project modes
+Project-local artifacts have priority.
 
-### Global catalog + project routing
+`ai-skills integrate`:
+
+- never overwrites a non-managed same-name local skill;
+- never overwrites a non-managed same-name local agent;
+- never automatically edits `AGENTS.md`, `AGENTS.override.md`, `CLAUDE.md`, `GEMINI.md`, `DESIGN.md`, or local rule files;
+- stages only the Project Integration Architect as a project role before semantic role analysis;
+- refreshes only project copies explicitly marked as managed by this package;
+- generates an inventory and semantic-integration prompt under `.ai-agents-skills/`.
+
+## Existing-project workflow
+
+### Read-only plan
 
 ```bash
-ai-skills project /path/to/repo
+ai-skills integrate /path/to/repo --plan
 ```
 
-Best default for a single developer. Skills remain global, while the repository gets platform agent profiles, compact routing rules and `DESIGN.md` integration.
+No files are written.
+
+### Safe structural staging
+
+```bash
+ai-skills integrate /path/to/repo
+```
+
+Adds the integration architect and:
+
+```text
+.ai-agents-skills/
+├── README.md
+├── PROJECT_INVENTORY.md
+└── INTEGRATION_PROMPT.md
+```
+
+Existing project memory/design documents stay unchanged.
 
 ### Vendored team setup
 
 ```bash
-ai-skills project /path/to/repo --vendor
+ai-skills integrate /path/to/repo --vendor
 ```
 
-Copies skills into the project discovery locations so teammates and CI environments receive the same catalog from Git.
+Copies package-managed skills into project discovery locations while preserving same-name project-local skills.
+
+### Agent-assisted semantic merge
+
+```bash
+ai-skills prompt /path/to/repo
+```
+
+prints the prepared prompt used by the Project Integration Architect. The agent inventories the existing system, maps existing roles to reusable capabilities, and only then decides which library agents/rules should be added or which existing project roles should be minimally augmented.
+
+`ai-skills project ...` remains a compatibility alias for `ai-skills integrate ...`.
+
+See [`existing-project-integration.md`](existing-project-integration.md).
 
 ## Environment variables
 
@@ -89,4 +129,4 @@ ai-skills list agents
 ai-skills doctor
 ```
 
-`doctor` validates the source corpus and verifies the main registrations for the three supported agent environments.
+`doctor` validates the source corpus and main global registrations. Existing-project non-destructive behavior is covered by the package smoke tests.
