@@ -1,61 +1,74 @@
 # UI/UX patterns and anti-patterns
 
-Это общий реестр. Domain-specific skills могут вводить более строгие правила.
+Общий реестр. Domain-specific skills могут вводить более строгие правила.
 
 | Задача | Паттерн | Антипаттерн |
 |---|---|---|
+| Несколько controls обслуживают одну частую операцию | Interaction Recomposition: intent → semantic axes → derived/rare state → новый единый interaction model | Чинить каждый dropdown/button отдельно |
 | Частый выбор 2–4 режимов | Segmented control / toggle group, один клик | Прятать `Текущие/Архив`, `Факт/Прогноз` в combo |
-| Большой список моделей/станций | Searchable combo с вторичными метаданными | Огромная всегда открытая панель или необъяснимые `identity/center/id` |
+| Переключение основных связанных content panes | Tabs / tab view | View combo или ряд несвязанных кнопок |
+| Большой список моделей/станций | Searchable combo с вторичными метаданными | Огромная открытая панель или `identity/center/id` как основной label |
+| Редкие фильтры/слои/настройки | Компактный summary + popover/inspector | Постоянная панель, отнимающая work surface |
+| Настоящий упорядоченный диапазон | Slider/scrubber + точное значение/keyboard | Slider для категорий без естественного порядка |
 | Длительная загрузка | Локальный pending status + сохранять предыдущие данные | Блокировать весь экран spinner-ом |
-| Смена срока | Старый кадр остаётся до готовности нового + явный loading marker выбранного срока | Очищать карту, создавая белую вспышку/пустоту |
-| Ошибка одного слоя | Partial state, слой помечен, остальное работает | Общая modal error, уничтожающая рабочий контекст |
-| Частое keyboard действие | Мгновенная реакция | 200–400 ms animation на каждый Arrow/Space |
-| Масштаб карты | Zoom под курсором + LOD/data semantic thresholds | Zoom вокруг центра окна; незаметная смена данных в случайный момент |
-| Дополнительные настройки | Progressive disclosure/inspector | Все параметры постоянно занимают экран |
-| Опасное действие | Явная destructive affordance + confirm только если потеря существенна | Confirm на каждую мелочь или мгновенное необратимое действие |
+| Смена срока | Старый кадр остаётся до готовности нового + pending marker | Очищать карту/график между сроками |
+| Ошибка одного слоя | Partial state, слой помечен, остальное работает | Общая modal error, уничтожающая контекст |
+| Частое keyboard действие | Мгновенная реакция | 200–400 ms animation на Arrow/Space |
+| Масштаб карты | Zoom под курсором + semantic LOD | Zoom вокруг центра; скрытая смена данных |
 | Группировка | Proximity + alignment + shared heading | Карточка внутри карточки, рамка вокруг каждого поля |
 | Статус | Текст/иконка/shape плюс цвет | Цвет как единственный канал |
-| Tooltip | Для уточнения вторичной информации | Tooltip вместо видимой основной подписи |
-| Motion | Объясняет origin/continuity/state | Bounce/tilt/glow в частом operator workflow |
-| Пустое состояние | Объясняет почему пусто и следующее действие | `Нет данных` без причины/диапазона/способа исправить |
-| Таблица/график | Единицы рядом с осью/колонкой, tabular numerals | Единица повторяется в каждой ячейке или отсутствует |
+| Motion | Origin/continuity/state | Bounce/tilt/glow в operator workflow |
+| Пустое состояние | Причина + диапазон + следующее действие | Просто `Нет данных` |
+| Таблица/график | Единицы рядом с осью/колонкой, tabular numerals | Единица в каждой ячейке или отсутствует |
 
 ## Корневые антипаттерны
 
-### UI отражает структуру базы данных, а не работу пользователя
+### Control fragmentation
 
-Если пользователь думает «покажи осадки на 18:30», интерфейс не должен заставлять его выбирать internal product id, run key и dataset identity по отдельности.
+Несколько формально правильных controls могут вместе образовывать неправильную interaction model. Если пользователь для одного намерения обычно проходит `dropdown → dropdown → button → dropdown → apply`, аудит обязан проверить саму декомпозицию.
+
+Алгоритм: сформулировать intent, разделить независимые semantic axes, убрать безопасно выводимые/derived controls, вынести редкие overrides в contextual disclosure, затем выбрать tabs/segmented/popover/slider/scrubber/toolbars по их семантике. Цель — минимум ненужных решений, а не минимум widgets.
+
+### UI отражает структуру базы данных
+
+Если пользователь думает «покажи осадки на 18:30», UI не должен заставлять отдельно выбирать internal product id, run key и dataset identity. Backend decomposition не является interaction architecture.
+
+### Wrong primitive semantics
+
+Количество вариантов не определяет control автоматически. Пять связанных main-content panes могут быть tabs; пять редких объектов — combo. Slider допустим для реального упорядоченного диапазона, а не для произвольных категорий. Segmented control подходит для компактных связанных режимов/действий, но не заменяет сложную навигацию.
 
 ### Скрытая click tax
 
-Частое действие, требующее раскрыть dropdown, найти пункт и закрыть dropdown, должно рассматриваться как дефект flow, если его можно сделать прямым переключателем без потери пространства.
+Частое действие, требующее открыть dropdown, найти пункт и закрыть его, — дефект flow, если прямое переключение или direct manipulation уменьшает стоимость без потери ясности.
 
 ### State without feedback
 
-После click/drag/wheel пользователь должен понимать, принято ли действие. Асинхронное действие обязано иметь immediate acknowledgement до прихода данных.
+После click/drag/wheel пользователь сразу понимает, принято ли действие. Асинхронное действие имеет immediate acknowledgement до результата.
 
 ### Surprise context change
 
-Жест не должен неожиданно менять одновременно zoom, time, model и selected point. Один жест — одна основная семантическая ось. Связанная автоматическая смена LOD допускается только как понятное следствие текущего масштаба.
+Один жест — одна основная семантическая ось. Zoom, time, model и selected point не должны незаметно меняться вместе.
 
 ### Permanent secondary UI
 
-Редкие фильтры, диагностические поля и advanced settings не должны постоянно конкурировать с картой/графиком за площадь.
+Редкие filters/diagnostics/advanced settings не конкурируют с map/plot за постоянную площадь.
 
 ### Animation tax
 
-Если действие повторяется десятки раз за сеанс, каждые дополнительные 150–300 ms превращаются в систематическую задержку. Частые actions должны snap immediately.
+Частые actions snap immediately; дополнительные 150–300 ms на повторяемом действии становятся систематической задержкой.
 
 ### Empty whitespace as pseudo-premium design
 
-Профессиональный desktop UI не должен копировать mobile/marketing spacing. Воздух нужен для группировки, но значимая информация должна помещаться в рабочий viewport без постоянного скролла.
+Профессиональный desktop UI не копирует mobile/marketing spacing. Воздух служит группировке, а не вытеснению данных из viewport.
 
 ### Generic template as product concept
 
-Чистая сетка, аккуратные карточки и хорошая типографика могут дать DECENT интерфейс, но не являются interaction concept. Для существенной primary work surface необходимо проверить, отражает ли organizing logic реальную предметную работу. Если после замены метеопараметров на продажи/конверсию/регионы тот же экран остаётся столь же естественным, концепция слишком generic.
+Чистая сетка, карточки и хорошая типографика могут быть DECENT, но не являются interaction concept. Для primary work surface проверяется organizing logic; standard dialog/menu/table/combo/toolbar не обязаны быть уникальными.
 
-Это правило не применяется к обычным dialog/menu/table/combo/toolbar: стандартный control не обязан быть уникальным.
+### Apple-like as visual cargo cult
+
+Apple-like означает semantic economy, content-first, direct manipulation, familiar controls и contextual disclosure. Это не обязательные glass/pills, огромные отступы, скрытые labels или анимация каждого действия.
 
 ### Anti-slop as cargo-cult
 
-Антислоп не означает «запретить все cards/animation/gradients». Правила делятся на correctness/safety запреты, defaults-to-reject и patterns allowed with justification. Если агент начинает изобретать необычный control только ради непохожести на шаблон, методология используется неправильно.
+Anti-slop не означает универсальный запрет cards/animation/gradients. Correctness/safety rules, defaults-to-reject и allowed-with-justification остаются разными уровнями.

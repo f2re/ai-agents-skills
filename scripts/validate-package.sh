@@ -3,21 +3,53 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fail(){ echo "ERROR: $*" >&2; exit 1; }
-count_glob(){
-  local n=0 f
-  for f in "$@"; do [[ -f "$f" ]] && n=$((n + 1)); done
-  printf '%s\n' "$n"
-}
 
 bash -n "$ROOT/install.sh" "$ROOT/bin/ai-skills" "$ROOT/scripts/install-ui-skills.sh"
 "$ROOT/scripts/validate-skills.sh"
 
-codex_count="$(count_glob "$ROOT"/integrations/codex/agents/*.toml)"
-claude_count="$(count_glob "$ROOT"/integrations/claude/agents/*.md)"
-antigravity_count="$(count_glob "$ROOT"/integrations/antigravity/agents/*/agent.md)"
-[[ "$codex_count" -eq 7 ]] || fail "expected 7 Codex agents, got $codex_count"
-[[ "$claude_count" -eq 7 ]] || fail "expected 7 Claude agents, got $claude_count"
-[[ "$antigravity_count" -eq 7 ]] || fail "expected 7 Antigravity agents, got $antigravity_count"
+# Canonical agent set: compare names, not a magic numeric count.
+EXPECTED_AGENTS="$(cat <<'EOF'
+ai-skills-orchestrator
+meteo-workstation-designer
+motion-interaction-reviewer
+project-integration-architect
+qt-interface-designer
+ui-methodology-director
+ui-ux-auditor
+EOF
+)"
+
+list_codex_agents(){
+  local f
+  for f in "$ROOT"/integrations/codex/agents/*.toml; do
+    [[ -f "$f" ]] && basename "$f" .toml
+  done | sort
+}
+list_claude_agents(){
+  local f
+  for f in "$ROOT"/integrations/claude/agents/*.md; do
+    [[ -f "$f" ]] && basename "$f" .md
+  done | sort
+}
+list_antigravity_agents(){
+  local d
+  for d in "$ROOT"/integrations/antigravity/agents/*; do
+    [[ -f "$d/agent.md" ]] && basename "$d"
+  done | sort
+}
+assert_agent_set(){
+  local label="$1" actual="$2"
+  if [[ "$actual" != "$EXPECTED_AGENTS" ]]; then
+    echo "ERROR: $label agent set differs from canonical set" >&2
+    echo "Expected:" >&2; printf '%s\n' "$EXPECTED_AGENTS" >&2
+    echo "Actual:" >&2; printf '%s\n' "$actual" >&2
+    return 1
+  fi
+}
+
+assert_agent_set "Codex" "$(list_codex_agents)"
+assert_agent_set "Claude" "$(list_claude_agents)"
+assert_agent_set "Antigravity" "$(list_antigravity_agents)"
 
 for f in "$ROOT"/integrations/codex/agents/*.toml; do
   [[ -f "$f" ]] || continue
@@ -40,6 +72,18 @@ for f in "$ROOT"/integrations/antigravity/agents/*/agent.md; do
   grep -q '^subagent:[[:space:]]*true' "$f" || fail "$f must be callable as subagent"
 done
 
+# Interaction-recomposition wiring must remain discoverable and cross-platform.
+[[ -f "$ROOT/.agents/skills/dense-controls-and-selection/references/control-recomposition.md" ]] || fail "control recomposition reference missing"
+grep -q 'Interaction Recomposition Pass' "$ROOT/.agents/skills/dense-controls-and-selection/SKILL.md" || fail "dense-controls skill lacks recomposition pass"
+grep -q 'Control fragmentation and recomposition' "$ROOT/.agents/skills/ui-audit-and-acceptance/SKILL.md" || fail "acceptance lacks control fragmentation audit"
+grep -q 'Control-cluster simplification' "$ROOT/.agents/skills/ui-skill-router/SKILL.md" || fail "UI router lacks local recomposition route"
+for f in \
+  "$ROOT/integrations/codex/agents/ui-ux-auditor.toml" \
+  "$ROOT/integrations/claude/agents/ui-ux-auditor.md" \
+  "$ROOT/integrations/antigravity/agents/ui-ux-auditor/agent.md"; do
+  grep -q 'Recomposition' "$f" || fail "$f lacks recomposition contract"
+done
+
 sandbox="$(mktemp -d)"
 trap 'rm -rf "$sandbox"' EXIT
 export HOME="$sandbox/home"
@@ -51,12 +95,12 @@ mkdir -p "$HOME"
 [[ "$(grep -c 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md")" -eq 1 ]] || fail "global Codex block duplicated"
 "$ROOT/bin/ai-skills" doctor
 
-for skill in skill-agent-orchestrator anti-slop-ui-direction existing-project-integration; do
+for skill in skill-agent-orchestrator anti-slop-ui-direction dense-controls-and-selection existing-project-integration; do
   [[ -L "$HOME/.agents/skills/$skill" ]] || fail "Codex global skill missing: $skill"
   [[ -L "$HOME/.claude/skills/$skill" ]] || fail "Claude global skill missing: $skill"
   [[ -L "$HOME/.gemini/config/skills/$skill" ]] || fail "Antigravity global skill missing: $skill"
 done
-for agent in ai-skills-orchestrator ui-methodology-director project-integration-architect; do
+for agent in ai-skills-orchestrator ui-methodology-director ui-ux-auditor project-integration-architect; do
   [[ -L "$HOME/.codex/agents/$agent.toml" ]] || fail "Codex global agent missing: $agent"
   [[ -L "$HOME/.claude/agents/$agent.md" ]] || fail "Claude global agent missing: $agent"
   [[ -f "$HOME/.gemini/config/agents/$agent/agent.md" ]] || fail "Antigravity global agent missing: $agent"
@@ -66,7 +110,7 @@ grep -q 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md" || fail "Codex managed
 grep -q 'ai-agents-skills:begin' "$HOME/.claude/CLAUDE.md" || fail "Claude managed global block missing"
 grep -q 'ai-agents-skills:begin' "$HOME/.gemini/GEMINI.md" || fail "Antigravity managed global block missing"
 
-# --plan must be genuinely read-only.
+# --plan is genuinely read-only.
 plan_project="$sandbox/plan-project"
 mkdir -p "$plan_project/nested"
 printf '# Plan-only rules\n' > "$plan_project/AGENTS.md"
@@ -77,7 +121,7 @@ printf '# Nested rules\n' > "$plan_project/nested/AGENTS.override.md"
 grep -q 'Will NOT modify automatically' "$sandbox/plan.txt" || fail "plan lacks non-invasive contract"
 grep -q 'Plan-only rules' "$plan_project/AGENTS.md" || fail "plan changed AGENTS.md"
 
-# Existing project-owned artifacts must remain byte-for-byte unchanged.
+# Existing project-owned artifacts remain byte-for-byte unchanged.
 project="$sandbox/project"
 mkdir -p "$project/.agents/skills/existing-project-integration" "$project/.codex/agents" "$project/nested"
 printf '# Existing project rules\n\nKeep AGENTS exactly.\n' > "$project/AGENTS.md"
@@ -109,16 +153,18 @@ cmp "$sandbox/local-agent.before" "$project/.codex/agents/project-integration-ar
 grep -q 'Project-local rules win' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks authority rule"
 grep -q 'nested/AGENTS.md' "$project/.ai-agents-skills/PROJECT_INVENTORY.md" || fail "inventory missed nested AGENTS.md"
 grep -q 'anti-slop-ui-direction' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks live library catalog"
+grep -q 'dense-controls-and-selection' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks recomposition skill metadata"
 
-# Only the integration architect is staged automatically; semantic roles are selected later.
+# Only integration architect is staged automatically; semantic roles are selected later.
 [[ -f "$project/.claude/agents/project-integration-architect.md" ]] || fail "Claude integration architect missing"
 [[ -f "$project/.agents/agents/project-integration-architect/agent.md" ]] || fail "Antigravity integration architect missing"
 [[ ! -e "$project/.codex/agents/ui-methodology-director.toml" ]] || fail "integrate staged unrelated library agents before role analysis"
 [[ ! -e "$project/.claude/agents/ui-ux-auditor.md" ]] || fail "integrate staged unrelated library agents before role analysis"
 
-# Vendor mode adds non-conflicting skills and marks package-owned copies.
+# Vendor mode adds only non-conflicting package-managed skills.
 [[ -f "$project/.agents/skills/skill-agent-orchestrator/SKILL.md" ]] || fail "vendored shared skill missing"
 [[ -f "$project/.agents/skills/anti-slop-ui-direction/SKILL.md" ]] || fail "vendored anti-slop skill missing"
+[[ -f "$project/.agents/skills/dense-controls-and-selection/SKILL.md" ]] || fail "vendored recomposition skill missing"
 [[ -f "$project/.claude/skills/skill-agent-orchestrator/SKILL.md" ]] || fail "vendored Claude skill missing"
 [[ -f "$project/.agents/skills/skill-agent-orchestrator/.ai-agents-skills-managed" ]] || fail "vendored skill missing managed marker"
 
@@ -134,4 +180,4 @@ cmp "$sandbox/DESIGN.before" "$project/DESIGN.md" || fail "repeat integrate chan
 cmp "$sandbox/local-skill.before" "$project/.agents/skills/existing-project-integration/SKILL.md" || fail "repeat integrate overwrote local skill"
 cmp "$sandbox/local-agent.before" "$project/.codex/agents/project-integration-architect.toml" || fail "repeat integrate overwrote local agent"
 
-echo "Validated project-first integration, anti-slop corpus and platform registrations"
+echo "Validated canonical agent parity, interaction recomposition, project-first integration and platform registrations"
