@@ -15,9 +15,9 @@ bash -n "$ROOT/install.sh" "$ROOT/bin/ai-skills" "$ROOT/scripts/install-ui-skill
 codex_count="$(count_glob "$ROOT"/integrations/codex/agents/*.toml)"
 claude_count="$(count_glob "$ROOT"/integrations/claude/agents/*.md)"
 antigravity_count="$(count_glob "$ROOT"/integrations/antigravity/agents/*/agent.md)"
-[[ "$codex_count" -eq 6 ]] || fail "expected 6 Codex agents, got $codex_count"
-[[ "$claude_count" -eq 6 ]] || fail "expected 6 Claude agents, got $claude_count"
-[[ "$antigravity_count" -eq 6 ]] || fail "expected 6 Antigravity agents, got $antigravity_count"
+[[ "$codex_count" -eq 7 ]] || fail "expected 7 Codex agents, got $codex_count"
+[[ "$claude_count" -eq 7 ]] || fail "expected 7 Claude agents, got $claude_count"
+[[ "$antigravity_count" -eq 7 ]] || fail "expected 7 Antigravity agents, got $antigravity_count"
 
 for f in "$ROOT"/integrations/codex/agents/*.toml; do
   [[ -f "$f" ]] || continue
@@ -51,46 +51,87 @@ mkdir -p "$HOME"
 [[ "$(grep -c 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md")" -eq 1 ]] || fail "global Codex block duplicated"
 "$ROOT/bin/ai-skills" doctor
 
-[[ -L "$HOME/.agents/skills/skill-agent-orchestrator" ]] || fail "Codex skill registration missing"
-[[ -L "$HOME/.agents/skills/anti-slop-ui-direction" ]] || fail "Codex anti-slop skill registration missing"
-[[ -L "$HOME/.claude/skills/skill-agent-orchestrator" ]] || fail "Claude skill registration missing"
-[[ -L "$HOME/.claude/skills/anti-slop-ui-direction" ]] || fail "Claude anti-slop skill registration missing"
-[[ -L "$HOME/.gemini/config/skills/skill-agent-orchestrator" ]] || fail "Antigravity skill registration missing"
-[[ -L "$HOME/.gemini/config/skills/anti-slop-ui-direction" ]] || fail "Antigravity anti-slop skill registration missing"
-[[ -L "$HOME/.codex/agents/ai-skills-orchestrator.toml" ]] || fail "Codex orchestrator missing"
-[[ -L "$HOME/.codex/agents/ui-methodology-director.toml" ]] || fail "Codex methodology director missing"
-[[ -L "$HOME/.claude/agents/ai-skills-orchestrator.md" ]] || fail "Claude orchestrator missing"
-[[ -L "$HOME/.claude/agents/ui-methodology-director.md" ]] || fail "Claude methodology director missing"
-[[ -f "$HOME/.gemini/config/agents/ai-skills-orchestrator/agent.md" ]] || fail "Antigravity orchestrator missing"
-[[ -f "$HOME/.gemini/config/agents/ui-methodology-director/agent.md" ]] || fail "Antigravity methodology director missing"
-grep -q 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md" || fail "Codex managed rule block missing"
-grep -q 'ai-agents-skills:begin' "$HOME/.claude/CLAUDE.md" || fail "Claude managed rule block missing"
-grep -q 'ai-agents-skills:begin' "$HOME/.gemini/GEMINI.md" || fail "Antigravity managed rule block missing"
+for skill in skill-agent-orchestrator anti-slop-ui-direction existing-project-integration; do
+  [[ -L "$HOME/.agents/skills/$skill" ]] || fail "Codex global skill missing: $skill"
+  [[ -L "$HOME/.claude/skills/$skill" ]] || fail "Claude global skill missing: $skill"
+  [[ -L "$HOME/.gemini/config/skills/$skill" ]] || fail "Antigravity global skill missing: $skill"
+done
+for agent in ai-skills-orchestrator ui-methodology-director project-integration-architect; do
+  [[ -L "$HOME/.codex/agents/$agent.toml" ]] || fail "Codex global agent missing: $agent"
+  [[ -L "$HOME/.claude/agents/$agent.md" ]] || fail "Claude global agent missing: $agent"
+  [[ -f "$HOME/.gemini/config/agents/$agent/agent.md" ]] || fail "Antigravity global agent missing: $agent"
+done
 
+grep -q 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md" || fail "Codex managed global block missing"
+grep -q 'ai-agents-skills:begin' "$HOME/.claude/CLAUDE.md" || fail "Claude managed global block missing"
+grep -q 'ai-agents-skills:begin' "$HOME/.gemini/GEMINI.md" || fail "Antigravity managed global block missing"
+
+# --plan must be genuinely read-only.
+plan_project="$sandbox/plan-project"
+mkdir -p "$plan_project/nested"
+printf '# Plan-only rules\n' > "$plan_project/AGENTS.md"
+printf '# Nested rules\n' > "$plan_project/nested/AGENTS.override.md"
+"$ROOT/bin/ai-skills" integrate "$plan_project" --plan > "$sandbox/plan.txt"
+[[ ! -e "$plan_project/.ai-agents-skills" ]] || fail "--plan created adapter files"
+[[ ! -e "$plan_project/.codex" ]] || fail "--plan staged agents"
+grep -q 'Will NOT modify automatically' "$sandbox/plan.txt" || fail "plan lacks non-invasive contract"
+grep -q 'Plan-only rules' "$plan_project/AGENTS.md" || fail "plan changed AGENTS.md"
+
+# Existing project-owned artifacts must remain byte-for-byte unchanged.
 project="$sandbox/project"
-mkdir -p "$project"
-printf '# Existing project rules\n\nKeep this.\n' > "$project/AGENTS.md"
-printf '# Existing design decisions\n\nKeep this too.\n' > "$project/DESIGN.md"
-"$ROOT/bin/ai-skills" project "$project"
-grep -q 'Keep this.' "$project/AGENTS.md" || fail "project integration overwrote AGENTS.md"
-grep -q 'ai-agents-skills:begin' "$project/AGENTS.md" || fail "project AGENTS block missing"
-grep -q 'Keep this too.' "$project/DESIGN.md" || fail "project integration overwrote DESIGN.md"
-grep -q 'ai-agents-skills:begin' "$project/DESIGN.md" || fail "project DESIGN block missing"
-[[ -f "$project/.codex/agents/ai-skills-orchestrator.toml" ]] || fail "project Codex agent missing"
-[[ -f "$project/.codex/agents/ui-methodology-director.toml" ]] || fail "project Codex methodology director missing"
-[[ -f "$project/.claude/agents/ai-skills-orchestrator.md" ]] || fail "project Claude agent missing"
-[[ -f "$project/.claude/agents/ui-methodology-director.md" ]] || fail "project Claude methodology director missing"
-[[ -f "$project/.agents/agents/ai-skills-orchestrator/agent.md" ]] || fail "project Antigravity agent missing"
-[[ -f "$project/.agents/agents/ui-methodology-director/agent.md" ]] || fail "project Antigravity methodology director missing"
+mkdir -p "$project/.agents/skills/existing-project-integration" "$project/.codex/agents" "$project/nested"
+printf '# Existing project rules\n\nKeep AGENTS exactly.\n' > "$project/AGENTS.md"
+printf '# Nested local scope\n' > "$project/nested/AGENTS.md"
+printf '# Existing Claude rules\n\nKeep CLAUDE exactly.\n' > "$project/CLAUDE.md"
+printf '# Existing Gemini rules\n\nKeep GEMINI exactly.\n' > "$project/GEMINI.md"
+printf '# Existing design decisions\n\nKeep DESIGN exactly.\n' > "$project/DESIGN.md"
+printf '%s\n' '---' 'name: existing-project-integration' 'description: Local project integration policy.' '---' '' 'LOCAL-SKILL-MUST-WIN' > "$project/.agents/skills/existing-project-integration/SKILL.md"
+printf 'name = "Local Integration Architect"\n# LOCAL-AGENT-MUST-WIN\n' > "$project/.codex/agents/project-integration-architect.toml"
 
-"$ROOT/bin/ai-skills" project "$project" --vendor
+cp "$project/AGENTS.md" "$sandbox/AGENTS.before"
+cp "$project/CLAUDE.md" "$sandbox/CLAUDE.before"
+cp "$project/GEMINI.md" "$sandbox/GEMINI.before"
+cp "$project/DESIGN.md" "$sandbox/DESIGN.before"
+cp "$project/.agents/skills/existing-project-integration/SKILL.md" "$sandbox/local-skill.before"
+cp "$project/.codex/agents/project-integration-architect.toml" "$sandbox/local-agent.before"
+
+"$ROOT/bin/ai-skills" integrate "$project" --vendor
+
+cmp "$sandbox/AGENTS.before" "$project/AGENTS.md" || fail "integrate modified AGENTS.md"
+cmp "$sandbox/CLAUDE.before" "$project/CLAUDE.md" || fail "integrate modified CLAUDE.md"
+cmp "$sandbox/GEMINI.before" "$project/GEMINI.md" || fail "integrate modified GEMINI.md"
+cmp "$sandbox/DESIGN.before" "$project/DESIGN.md" || fail "integrate modified DESIGN.md"
+cmp "$sandbox/local-skill.before" "$project/.agents/skills/existing-project-integration/SKILL.md" || fail "vendoring overwrote local same-name skill"
+cmp "$sandbox/local-agent.before" "$project/.codex/agents/project-integration-architect.toml" || fail "integration overwrote local same-name agent"
+
+[[ -f "$project/.ai-agents-skills/PROJECT_INVENTORY.md" ]] || fail "project inventory missing"
+[[ -f "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" ]] || fail "integration prompt missing"
+grep -q 'Project-local rules win' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks authority rule"
+grep -q 'nested/AGENTS.md' "$project/.ai-agents-skills/PROJECT_INVENTORY.md" || fail "inventory missed nested AGENTS.md"
+grep -q 'anti-slop-ui-direction' "$project/.ai-agents-skills/INTEGRATION_PROMPT.md" || fail "integration prompt lacks live library catalog"
+
+# Only the integration architect is staged automatically; semantic roles are selected later.
+[[ -f "$project/.claude/agents/project-integration-architect.md" ]] || fail "Claude integration architect missing"
+[[ -f "$project/.agents/agents/project-integration-architect/agent.md" ]] || fail "Antigravity integration architect missing"
+[[ ! -e "$project/.codex/agents/ui-methodology-director.toml" ]] || fail "integrate staged unrelated library agents before role analysis"
+[[ ! -e "$project/.claude/agents/ui-ux-auditor.md" ]] || fail "integrate staged unrelated library agents before role analysis"
+
+# Vendor mode adds non-conflicting skills and marks package-owned copies.
 [[ -f "$project/.agents/skills/skill-agent-orchestrator/SKILL.md" ]] || fail "vendored shared skill missing"
 [[ -f "$project/.agents/skills/anti-slop-ui-direction/SKILL.md" ]] || fail "vendored anti-slop skill missing"
 [[ -f "$project/.claude/skills/skill-agent-orchestrator/SKILL.md" ]] || fail "vendored Claude skill missing"
-[[ -f "$project/.claude/skills/anti-slop-ui-direction/SKILL.md" ]] || fail "vendored Claude anti-slop skill missing"
+[[ -f "$project/.agents/skills/skill-agent-orchestrator/.ai-agents-skills-managed" ]] || fail "vendored skill missing managed marker"
 
-"$ROOT/bin/ai-skills" project "$project"
-[[ "$(grep -c 'ai-agents-skills:begin' "$project/AGENTS.md")" -eq 1 ]] || fail "AGENTS managed block duplicated"
-[[ "$(grep -c 'ai-agents-skills:begin' "$project/DESIGN.md")" -eq 1 ]] || fail "DESIGN managed block duplicated"
+"$ROOT/bin/ai-skills" prompt "$project" > "$sandbox/prompt.txt"
+grep -q 'Existing Project Integration Prompt' "$sandbox/prompt.txt" || fail "prompt command missing template"
+grep -q 'Existing instruction/design files' "$sandbox/prompt.txt" || fail "prompt command missing live inventory"
+grep -q 'Project Integration Architect' "$sandbox/prompt.txt" || fail "prompt missing semantic role"
 
-echo "Validated universal installer package and registrations"
+# Repeated integration remains non-destructive and idempotent.
+"$ROOT/bin/ai-skills" integrate "$project" --vendor
+cmp "$sandbox/AGENTS.before" "$project/AGENTS.md" || fail "repeat integrate changed AGENTS.md"
+cmp "$sandbox/DESIGN.before" "$project/DESIGN.md" || fail "repeat integrate changed DESIGN.md"
+cmp "$sandbox/local-skill.before" "$project/.agents/skills/existing-project-integration/SKILL.md" || fail "repeat integrate overwrote local skill"
+cmp "$sandbox/local-agent.before" "$project/.codex/agents/project-integration-architect.toml" || fail "repeat integrate overwrote local agent"
+
+echo "Validated project-first integration, anti-slop corpus and platform registrations"

@@ -13,20 +13,24 @@ die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 usage(){
   cat <<'USAGE'
-ai-skills — register and orchestrate AI Agents Skills
+ai-skills — register, integrate and orchestrate AI Agents Skills
 
 Commands:
-  global                 Register skills, agents and compact global routing rules.
-  project [PATH]         Integrate agents and routing rules into a repository.
-  project [PATH] --vendor  Also copy skills into the repository for team sharing.
-  update                 Re-run the remote bootstrap and refresh registrations.
-  list [skills|agents]   Show the registered catalog without loading skill bodies.
-  status                 Show installed targets and skill count.
-  doctor                 Validate source plus platform registrations.
-  uninstall              Remove managed symlinks/blocks; preserve unrelated user files.
-  help                   Show this help.
+  global                         Register global skills, agents and compact routing rules.
+  integrate [PATH]               Safely stage integration for an existing repository.
+  integrate [PATH] --plan        Analyze only; do not write anything.
+  integrate [PATH] --vendor      Also vendor non-conflicting skills for team use.
+  prompt [PATH]                  Print a repository-aware semantic integration prompt.
+  project [PATH] [--vendor]      Compatibility alias for `integrate`.
+  update                         Refresh from main and re-register.
+  list [skills|agents]           Show catalog metadata without loading skill bodies.
+  status                         Show source and registration locations.
+  doctor                         Validate source plus global registrations.
+  uninstall                      Remove managed global registrations/blocks only.
+  help                           Show this help.
 
-The installer never replaces a non-symlink skill or agent with the same name.
+`integrate` does not rewrite project AGENTS.md, CLAUDE.md, GEMINI.md, DESIGN.md,
+local rules, skills or agents. Project-local artifacts are authoritative.
 USAGE
 }
 
@@ -79,36 +83,41 @@ safe_link(){
   ln -s "$src" "$dst"
 }
 
-safe_copy(){
-  local src="$1" dst="$2"
-  mkdir -p "$(dirname "$dst")"
-  if [[ -e "$dst" || -L "$dst" ]]; then
-    warn "kept existing $dst"
-    return 0
-  fi
-  if [[ -d "$src" ]]; then cp -R "$src" "$dst"; else cp "$src" "$dst"; fi
-}
-
 managed_agent_copy(){
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
   if [[ -L "$dst" ]]; then
-    warn "kept external symlink $dst"
+    warn "kept project symlink $dst"
     return 0
   fi
   if [[ -d "$dst" ]]; then
     if [[ -f "$dst/agent.md" ]] && grep -q 'AI Agents Skills managed agent' "$dst/agent.md"; then
       rm -rf "$dst"; cp -R "$src" "$dst"; return 0
     fi
-    warn "kept existing $dst"; return 0
+    warn "SHADOW_LIBRARY: kept existing project agent $dst"; return 0
   fi
   if [[ -f "$dst" ]]; then
     if grep -q 'AI Agents Skills managed agent' "$dst"; then
       cp "$src" "$dst"; return 0
     fi
-    warn "kept existing $dst"; return 0
+    warn "SHADOW_LIBRARY: kept existing project agent $dst"; return 0
   fi
   if [[ -d "$src" ]]; then cp -R "$src" "$dst"; else cp "$src" "$dst"; fi
+}
+
+managed_skill_copy(){
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [[ -e "$dst" || -L "$dst" ]]; then
+    if [[ -d "$dst" && -f "$dst/.ai-agents-skills-managed" ]]; then
+      rm -rf "$dst"
+    else
+      warn "SHADOW_LIBRARY: kept existing project skill $dst"
+      return 0
+    fi
+  fi
+  cp -R "$src" "$dst"
+  : > "$dst/.ai-agents-skills-managed"
 }
 
 for_each_skill(){
@@ -121,7 +130,6 @@ for_each_skill(){
 register_global_skills(){
   local d name target
   while IFS= read -r d; do
-    [[ -f "$d/SKILL.md" ]] || continue
     name="$(basename "$d")"
     for target in \
       "$HOME/.agents/skills/$name" \
@@ -170,43 +178,245 @@ cmd_global(){
   ok "Global registration complete"
 }
 
-copy_project_agents(){
-  local project="$1" f d name
-  mkdir -p "$project/.codex/agents" "$project/.claude/agents" "$project/.agents/agents"
-  for f in "$ROOT"/integrations/codex/agents/*.toml; do [[ -f "$f" ]] && managed_agent_copy "$f" "$project/.codex/agents/$(basename "$f")"; done
-  for f in "$ROOT"/integrations/claude/agents/*.md; do [[ -f "$f" ]] && managed_agent_copy "$f" "$project/.claude/agents/$(basename "$f")"; done
-  for d in "$ROOT"/integrations/antigravity/agents/*; do
-    [[ -d "$d" ]] || continue; name="$(basename "$d")"; managed_agent_copy "$d" "$project/.agents/agents/$name"
-  done
+stage_integration_architect(){
+  local project="$1"
+  managed_agent_copy \
+    "$ROOT/integrations/codex/agents/project-integration-architect.toml" \
+    "$project/.codex/agents/project-integration-architect.toml"
+  managed_agent_copy \
+    "$ROOT/integrations/claude/agents/project-integration-architect.md" \
+    "$project/.claude/agents/project-integration-architect.md"
+  managed_agent_copy \
+    "$ROOT/integrations/antigravity/agents/project-integration-architect" \
+    "$project/.agents/agents/project-integration-architect"
 }
 
 vendor_project_skills(){
   local project="$1" d name
   mkdir -p "$project/.agents/skills" "$project/.claude/skills"
   while IFS= read -r d; do
-    [[ -f "$d/SKILL.md" ]] || continue; name="$(basename "$d")"
-    safe_copy "$d" "$project/.agents/skills/$name"
-    safe_copy "$d" "$project/.claude/skills/$name"
+    name="$(basename "$d")"
+    managed_skill_copy "$d" "$project/.agents/skills/$name"
+    managed_skill_copy "$d" "$project/.claude/skills/$name"
   done < <(for_each_skill)
 }
 
-cmd_project(){
-  local project="${1:-.}" vendor=0
-  shift || true
+count_dir_entries(){
+  local dir="$1" n=0 x
+  [[ -d "$dir" ]] || { printf '0\n'; return; }
+  for x in "$dir"/*; do [[ -e "$x" || -L "$x" ]] && n=$((n + 1)); done
+  printf '%s\n' "$n"
+}
+
+list_surface_entries(){
+  local dir="$1" x
+  [[ -d "$dir" ]] || return 0
+  for x in "$dir"/*; do
+    [[ -e "$x" || -L "$x" ]] && basename "$x"
+  done | sort
+}
+
+instruction_inventory(){
+  local project="$1" f rel
+  for f in \
+    CLAUDE.md .claude/CLAUDE.md CLAUDE.local.md \
+    GEMINI.md DESIGN.md design.md DESIGN_SYSTEM.md \
+    .cursorrules .windsurfrules
+  do
+    [[ -f "$project/$f" || -L "$project/$f" ]] && printf '%s\n' "$f"
+  done
+  if command -v find >/dev/null 2>&1; then
+    find "$project" \
+      \( -path "$project/.git" -o -path "$project/.ai-agents-skills" \) -prune -o \
+      -type f \( -name AGENTS.md -o -name AGENTS.override.md \) -print 2>/dev/null |
+      while IFS= read -r f; do rel="${f#"$project"/}"; printf '%s\n' "$rel"; done
+  else
+    for f in AGENTS.override.md AGENTS.md; do
+      [[ -f "$project/$f" ]] && printf '%s\n' "$f"
+    done
+  fi
+}
+
+project_capabilities(){
+  local project="$1" qt=0 meteo=0 webui=0 qmake
+  if [[ -f "$project/CMakeLists.txt" ]] && grep -Eiq 'find_package[[:space:]]*\([^)]*Qt|Qt[56]::|QWidget|QML' "$project/CMakeLists.txt"; then qt=1; fi
+  for qmake in "$project"/*.pro; do [[ -f "$qmake" ]] && qt=1; done
+  [[ -f "$project/package.json" ]] && webui=1
+  case "$(basename "$project" | tr '[:upper:]' '[:lower:]')" in
+    *meteo*|*weather*|*radar*|*mrl*|*forecast*|*satellite*) meteo=1 ;;
+  esac
+  if [[ -d "$project/.git" ]] && command -v git >/dev/null 2>&1; then
+    git -C "$project" grep -I -q -E 'GRIB|BUFR|ODIM|meteorolog|radar|nowcast|reflectivity' -- 2>/dev/null && meteo=1 || true
+  fi
+  printf 'qt=%s meteo=%s webui=%s\n' "$qt" "$meteo" "$webui"
+}
+
+render_surface_md(){
+  local project="$1" rel="$2" title="$3" names name
+  printf '### %s\n\n' "$title"
+  names="$(list_surface_entries "$project/$rel" || true)"
+  if [[ -z "$names" ]]; then
+    printf -- '- none\n\n'
+    return
+  fi
+  while IFS= read -r name; do [[ -n "$name" ]] && printf -- '- `%s/%s`\n' "$rel" "$name"; done <<< "$names"
+  printf '\n'
+}
+
+render_inventory(){
+  local project="$1" mode="${2:-text}" f instructions
+  instructions="$(instruction_inventory "$project" | sort -u || true)"
+  if [[ "$mode" == "markdown" ]]; then
+    printf '# Existing project integration inventory\n\n'
+    printf 'Project: `%s`\n\n' "$project"
+    printf 'Detected capabilities: `%s`\n\n' "$(project_capabilities "$project")"
+    printf '## Existing instruction/design files\n\n'
+    if [[ -n "$instructions" ]]; then
+      while IFS= read -r f; do [[ -n "$f" ]] && printf -- '- `%s`\n' "$f"; done <<< "$instructions"
+    else
+      printf -- '- none detected\n'
+    fi
+    printf '\n## Existing extension surfaces\n\n'
+    render_surface_md "$project" ".agents/skills" "Shared/Codex/Antigravity project skills"
+    render_surface_md "$project" ".claude/skills" "Claude project skills"
+    render_surface_md "$project" ".codex/agents" "Codex project agents"
+    render_surface_md "$project" ".claude/agents" "Claude project agents"
+    render_surface_md "$project" ".agents/agents" "Antigravity project agents"
+    render_surface_md "$project" ".claude/rules" "Claude scoped rules"
+    render_surface_md "$project" ".agents/rules" "Antigravity scoped rules"
+    printf '## Authority rule\n\nExisting project-local instructions, skills, agents, rules and design decisions are authoritative. Generic AI Agents Skills guidance must adapt to them, not replace them.\n'
+  else
+    echo "Project: $project"
+    echo "Capabilities: $(project_capabilities "$project")"
+    echo "Instruction/design files:"
+    if [[ -n "$instructions" ]]; then
+      while IFS= read -r f; do [[ -n "$f" ]] && echo "  - $f"; done <<< "$instructions"
+    else
+      echo "  - none detected"
+    fi
+    echo "Existing extension surfaces:"
+    echo "  .agents/skills: $(count_dir_entries "$project/.agents/skills")"
+    echo "  .claude/skills: $(count_dir_entries "$project/.claude/skills")"
+    echo "  .codex/agents: $(count_dir_entries "$project/.codex/agents")"
+    echo "  .claude/agents: $(count_dir_entries "$project/.claude/agents")"
+    echo "  .agents/agents: $(count_dir_entries "$project/.agents/agents")"
+    echo "  .claude/rules: $(count_dir_entries "$project/.claude/rules")"
+    echo "  .agents/rules: $(count_dir_entries "$project/.agents/rules")"
+  fi
+}
+
+render_library_catalog(){
+  local d f name desc
+  printf '## Available library skills\n\n'
+  while IFS= read -r d; do
+    name="$(sed -n 's/^name:[[:space:]]*//p' "$d/SKILL.md" | head -n1)"
+    desc="$(sed -n 's/^description:[[:space:]]*//p' "$d/SKILL.md" | head -n1)"
+    printf -- '- `%s` — %s\n' "$name" "$desc"
+  done < <(for_each_skill)
+  printf '\n## Available library agent roles\n\n'
+  for f in "$ROOT"/agents/*.md; do
+    [[ -f "$f" && "$(basename "$f")" != "README.md" ]] || continue
+    printf -- '- `%s`\n' "$(basename "$f" .md)"
+  done
+}
+
+render_integration_prompt(){
+  local project="$1"
+  cat "$ROOT/templates/EXISTING_PROJECT_INTEGRATION_PROMPT.md"
+  printf '\n\n---\n\n## Detected inventory for this repository\n\n'
+  render_inventory "$project" markdown
+  printf '\n\n---\n\n'
+  render_library_catalog
+}
+
+write_adapter_workspace(){
+  local project="$1" dir="$project/.ai-agents-skills"
+  mkdir -p "$dir"
+  cat > "$dir/README.md" <<'EOF'
+# AI Agents Skills project adapter
+
+This directory is additive integration metadata. It is not the project's source of truth and is not an always-loaded instruction surface.
+
+- Existing project instructions/design decisions/local rules/skills/agents remain authoritative.
+- `PROJECT_INVENTORY.md` records what deterministic discovery found.
+- `INTEGRATION_PROMPT.md` is the prepared prompt for the Project Integration Architect.
+- Only the integration architect is staged automatically as a project role; other library roles are selected or mapped semantically after repository analysis.
+EOF
+  render_inventory "$project" markdown > "$dir/PROJECT_INVENTORY.md"
+  render_integration_prompt "$project" > "$dir/INTEGRATION_PROMPT.md"
+}
+
+show_integration_plan(){
+  local project="$1" vendor="$2"
+  echo "Smart existing-project integration plan"
+  echo "======================================="
+  render_inventory "$project" text
+  cat <<'EOF'
+
+Will add/update:
+  - only the Project Integration Architect in native project agent locations,
+    unless a project-local same-name role already exists;
+  - .ai-agents-skills/PROJECT_INVENTORY.md;
+  - .ai-agents-skills/INTEGRATION_PROMPT.md;
+  - .ai-agents-skills/README.md.
+EOF
+  if [[ "$vendor" -eq 1 ]]; then
+    echo "  - package-managed project skill copies where no local collision exists."
+  else
+    echo "  - no project skill copies; global discovery can provide the skill catalog."
+  fi
+  cat <<'EOF'
+
+Will NOT modify automatically:
+  - AGENTS.md / AGENTS.override.md;
+  - CLAUDE.md / CLAUDE.local.md;
+  - GEMINI.md;
+  - DESIGN.md or other design-system documents;
+  - existing project-local skills, agents or rules;
+  - existing role/orchestration naming.
+
+The Project Integration Architect then performs semantic analysis and decides
+which library capabilities should be KEEP/REFERENCE/AUGMENT/ADD_NATIVE/
+SHADOW_LIBRARY/NO_CHANGE in the repository's own architecture.
+EOF
+}
+
+cmd_integrate(){
+  local project="${1:-.}" vendor=0 plan=0
+  if [[ $# -gt 0 ]]; then shift; fi
   while [[ $# -gt 0 ]]; do
-    case "$1" in --vendor) vendor=1;; *) die "unknown project option: $1";; esac
+    case "$1" in
+      --vendor) vendor=1 ;;
+      --plan) plan=1 ;;
+      --apply) plan=0 ;;
+      *) die "unknown integrate option: $1" ;;
+    esac
     shift
   done
   project="$(cd "$project" && pwd)"
-  info "Integrating project $project"
-  copy_project_agents "$project"
-  upsert_block "$project/AGENTS.md" "$ROOT/integrations/shared/project-orchestration.md"
-  upsert_block "$project/CLAUDE.md" "$ROOT/integrations/shared/project-orchestration.md"
-  upsert_block "$project/GEMINI.md" "$ROOT/integrations/shared/project-orchestration.md"
-  if [[ ! -e "$project/DESIGN.md" ]]; then cp "$ROOT/templates/DESIGN.md" "$project/DESIGN.md"; fi
-  upsert_block "$project/DESIGN.md" "$ROOT/integrations/shared/design-orchestration.md"
-  if [[ $vendor -eq 1 ]]; then vendor_project_skills "$project"; fi
-  ok "Project integration complete"
+  if [[ "$plan" -eq 1 ]]; then
+    show_integration_plan "$project" "$vendor"
+    return
+  fi
+  info "Staging non-invasive integration for $project"
+  stage_integration_architect "$project"
+  [[ "$vendor" -eq 1 ]] && vendor_project_skills "$project"
+  write_adapter_workspace "$project"
+  ok "Safe structural integration complete"
+  echo "  Existing root instruction/design files were not modified."
+  echo "  Inventory: $project/.ai-agents-skills/PROJECT_INVENTORY.md"
+  echo "  Agent prompt: $project/.ai-agents-skills/INTEGRATION_PROMPT.md"
+}
+
+cmd_prompt(){
+  local project="${1:-.}"
+  project="$(cd "$project" && pwd)"
+  render_integration_prompt "$project"
+}
+
+cmd_project(){
+  warn "'project' is a compatibility alias; prefer 'integrate'."
+  cmd_integrate "$@"
 }
 
 cmd_list(){
@@ -214,7 +424,6 @@ cmd_list(){
   case "$kind" in
     skills)
       while IFS= read -r d; do
-        [[ -f "$d/SKILL.md" ]] || continue
         name="$(sed -n 's/^name:[[:space:]]*//p' "$d/SKILL.md" | head -n1)"
         desc="$(sed -n 's/^description:[[:space:]]*//p' "$d/SKILL.md" | head -n1)"
         printf '%-38s %s\n' "$name" "$desc"
@@ -249,16 +458,22 @@ cmd_doctor(){
   for path in \
     "$HOME/.agents/skills/skill-agent-orchestrator" \
     "$HOME/.agents/skills/anti-slop-ui-direction" \
+    "$HOME/.agents/skills/existing-project-integration" \
     "$HOME/.claude/skills/skill-agent-orchestrator" \
     "$HOME/.claude/skills/anti-slop-ui-direction" \
+    "$HOME/.claude/skills/existing-project-integration" \
     "$HOME/.gemini/config/skills/skill-agent-orchestrator" \
     "$HOME/.gemini/config/skills/anti-slop-ui-direction" \
+    "$HOME/.gemini/config/skills/existing-project-integration" \
     "$HOME/.codex/agents/ai-skills-orchestrator.toml" \
     "$HOME/.codex/agents/ui-methodology-director.toml" \
+    "$HOME/.codex/agents/project-integration-architect.toml" \
     "$HOME/.claude/agents/ai-skills-orchestrator.md" \
     "$HOME/.claude/agents/ui-methodology-director.md" \
+    "$HOME/.claude/agents/project-integration-architect.md" \
     "$HOME/.gemini/config/agents/ai-skills-orchestrator/agent.md" \
-    "$HOME/.gemini/config/agents/ui-methodology-director/agent.md"
+    "$HOME/.gemini/config/agents/ui-methodology-director/agent.md" \
+    "$HOME/.gemini/config/agents/project-integration-architect/agent.md"
   do
     if [[ ! -e "$path" ]]; then warn "missing registration: $path"; failed=1; fi
   done
@@ -269,7 +484,7 @@ cmd_doctor(){
 cmd_uninstall(){
   local d name target
   while IFS= read -r d; do
-    [[ -f "$d/SKILL.md" ]] || continue; name="$(basename "$d")"
+    name="$(basename "$d")"
     for target in "$HOME/.agents/skills/$name" "$HOME/.claude/skills/$name" "$HOME/.gemini/config/skills/$name" "$HOME/.gemini/antigravity-cli/skills/$name" "$HOME/.gemini/antigravity/skills/$name"; do
       managed_link "$target" && rm -f "$target"
     done
@@ -277,9 +492,13 @@ cmd_uninstall(){
   local f
   for f in "$ROOT"/integrations/codex/agents/*.toml; do target="$HOME/.codex/agents/$(basename "$f")"; managed_link "$target" && rm -f "$target"; done
   for f in "$ROOT"/integrations/claude/agents/*.md; do target="$HOME/.claude/agents/$(basename "$f")"; managed_link "$target" && rm -f "$target"; done
-  for d in "$ROOT"/integrations/antigravity/agents/*; do [[ -d "$d" ]] || continue; name="$(basename "$d")"; target="$HOME/.gemini/config/agents/$name"; managed_link "$target" && rm -f "$target"; done
+  for d in "$ROOT"/integrations/antigravity/agents/*; do
+    [[ -d "$d" ]] || continue
+    name="$(basename "$d")"; target="$HOME/.gemini/config/agents/$name"
+    managed_link "$target" && rm -f "$target"
+  done
   strip_block "$HOME/.codex/AGENTS.md"; strip_block "$HOME/.claude/CLAUDE.md"; strip_block "$HOME/.gemini/GEMINI.md"
-  ok "Managed registrations removed. Source directory was preserved: $ROOT"
+  ok "Managed global registrations removed. Source directory was preserved: $ROOT"
 }
 
 cmd_update(){
@@ -288,6 +507,8 @@ cmd_update(){
 
 case "${1:-help}" in
   global) shift; cmd_global "$@" ;;
+  integrate) shift; cmd_integrate "$@" ;;
+  prompt) shift; cmd_prompt "$@" ;;
   project) shift; cmd_project "$@" ;;
   update) shift; cmd_update "$@" ;;
   list) shift; cmd_list "$@" ;;

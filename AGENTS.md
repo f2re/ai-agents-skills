@@ -16,3 +16,4 @@
 10. Любой новый skill должен быть добавлен в `.agents/skills/README.md` и при необходимости в agent compositions.
 11. Существенный новый/redesigned primary UI surface должен пройти concept gate (`anti-slop-ui-direction`) до implementation routing; не применять этот ритуал к локальным правкам с уже определённым interaction concept.
 12. Anti-slop — decision system, не визуальный стиль: genericity/templateability tests применяются к organizing logic и primary work surface, а не для изобретения нестандартных замен обычным Qt controls.
+13. Интеграция в существующий репозиторий обязана быть project-first: не переписывать `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `DESIGN.md`, локальные skills/agents/rules ради регистрации пакета; сначала inventory и authority map, затем native discovery, а semantic merge — только минимальный и обоснованный.
