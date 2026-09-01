@@ -14,3 +14,13 @@ jobs:
         run: bash scripts/validate-skills.sh
       - name: Validate installer and platform registrations
         run: bash scripts/validate-package.sh
+      - name: Smoke-test bootstrap download path
+        env:
+          AI_AGENTS_SKILLS_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          export HOME="$(mktemp -d)"
+          export XDG_DATA_HOME="$HOME/.local/share"
+          export AI_AGENTS_SKILLS_HOME="$HOME/.local/share/ai-agents-skills"
+          export AI_AGENTS_SKILLS_BIN="$HOME/.local/bin"
+          bash install.sh --no-global
+          "$HOME/.local/bin/ai-skills" help >/dev/null

@@ -48,7 +48,13 @@ url="https://codeload.github.com/$REPO/tar.gz/$REF"
 echo "→ Downloading $REPO@$REF"
 curl -fsSL --retry 3 --connect-timeout 15 "$url" -o "$archive"
 tar -xzf "$archive" -C "$tmp"
-source_dir="$(find "$tmp" -mindepth 1 -maxdepth 1 -type d -name 'ai-agents-skills-*' | head -n1)"
+source_dir=""
+for candidate in "$tmp"/ai-agents-skills-*; do
+  if [[ -d "$candidate" ]]; then
+    source_dir="$candidate"
+    break
+  fi
+done
 [[ -n "$source_dir" ]] || { echo "Cannot find extracted repository" >&2; exit 1; }
 
 mkdir -p "$(dirname "$INSTALL_DIR")" "$BIN_DIR"
