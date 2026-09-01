@@ -70,13 +70,50 @@ touch "$new_dir/.ai-agents-skills-managed"
 rm -rf "$INSTALL_DIR"
 mv "$new_dir" "$INSTALL_DIR"
 chmod +x "$INSTALL_DIR/bin/ai-skills" "$INSTALL_DIR/scripts/"*.sh "$INSTALL_DIR/install.sh" 2>/dev/null || true
-ln -sfn "$INSTALL_DIR/bin/ai-skills" "$BIN_DIR/ai-skills"
 
+write_launcher() {
+  local launcher="$BIN_DIR/ai-skills"
+  local target="$INSTALL_DIR/bin/ai-skills"
+  local existing="" launcher_tmp
+
+  if [[ -L "$launcher" ]]; then
+    existing="$(readlink "$launcher" 2>/dev/null || true)"
+    if [[ "$existing" != "$target" ]]; then
+      case "$existing" in
+        */ai-agents-skills/bin/ai-skills) ;;
+        *)
+          echo "Refusing to replace unrelated launcher symlink: $launcher -> $existing" >&2
+          exit 1
+          ;;
+      esac
+    fi
+  elif [[ -e "$launcher" ]]; then
+    if ! grep -q '^# AI Agents Skills managed launcher$' "$launcher" 2>/dev/null; then
+      echo "Refusing to replace unrelated launcher file: $launcher" >&2
+      exit 1
+    fi
+  fi
+
+  launcher_tmp="${launcher}.tmp.$$"
+  {
+    printf '%s\n' '#!/usr/bin/env bash'
+    printf '%s\n' '# AI Agents Skills managed launcher'
+    printf 'exec %q "$@"\n' "$target"
+  } > "$launcher_tmp"
+  chmod +x "$launcher_tmp"
+  rm -f "$launcher"
+  mv "$launcher_tmp" "$launcher"
+}
+
+write_launcher
+
+# Exercise the same launcher users call from PATH. Calling the managed source file
+# directly would hide launcher/root-resolution regressions.
 if [[ $RUN_GLOBAL -eq 1 ]]; then
-  "$INSTALL_DIR/bin/ai-skills" global
+  "$BIN_DIR/ai-skills" global
 fi
 if [[ -n "$PROJECT" ]]; then
-  "$INSTALL_DIR/bin/ai-skills" project "$PROJECT"
+  "$BIN_DIR/ai-skills" project "$PROJECT"
 fi
 
 echo
