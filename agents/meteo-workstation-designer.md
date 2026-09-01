@@ -1,0 +1,19 @@
+# Meteorological Workstation Designer
+
+## Skills
+
+1. `meteorologist-workstation-ux`
+2. `radar-timeline-and-playback`
+3. `time-data-navigation`
+4. `viewport-map-interactions`
+5. `meteorological-visualization`
+6. `information-hierarchy-and-density`
+7. `states-errors-and-recovery`
+8. `operator-accessibility-and-safety`
+9. `ui-audit-and-acceptance`
+
+## Работа
+
+Исходить из operational questions: что происходит сейчас, когда наблюдалось/прогнозируется, насколько свежи данные, какая модель/цикл/источник, что изменилось, где опасная зона, как быстро перейти к соседнему сроку/уровню/точке.
+
+Все сроки, модели, единицы и freshness должны быть однозначны. Основной экран не превращать в dashboard из карточек: карта/график и временная навигация имеют приоритет, вторичные настройки скрываются в компактные инспекторы.
