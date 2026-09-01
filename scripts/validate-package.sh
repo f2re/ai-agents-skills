@@ -115,10 +115,13 @@ for skill in \
 done
 grep -q 'Kafedra Planner / document workspace' "$ROOT/.agents/skills/ui-skill-router/SKILL.md" || fail "UI router lacks Kafedra route"
 grep -q 'kafedra-workspace-orchestrator' "$ROOT/.agents/skills/skill-agent-orchestrator/SKILL.md" || fail "global orchestrator lacks Kafedra domain route"
-grep -q 'review by exception' "$ROOT/.agents/skills/kafedra-document-intake/SKILL.md" || fail "Kafedra intake lacks exception-only review contract"
+grep -q 'kafedra-workspace-orchestrator' "$ROOT/integrations/shared/global-orchestration.md" || fail "global routing block lacks Kafedra domain route"
+grep -qi 'review by exception' "$ROOT/.agents/skills/kafedra-document-intake/SKILL.md" || fail "Kafedra intake lacks exception-only review contract"
 grep -q 'never-learn' "$ROOT/.agents/skills/kafedra-adaptive-controls/SKILL.md" || fail "Kafedra adaptive skill lacks safety classes"
 grep -q 'prefers-reduced-motion' "$ROOT/.agents/skills/kafedra-motion-continuity/SKILL.md" || fail "Kafedra motion lacks reduced-motion contract"
-grep -q 'partial' "$ROOT/.agents/skills/kafedra-ux-acceptance/SKILL.md" || fail "Kafedra acceptance lacks partial-success evidence"
+grep -q 'kafedra-plan-calendar-continuity' "$ROOT/profiles/kafedra-planner/ROUTING.md" || fail "Kafedra routing lacks plan/calendar continuity route"
+grep -q 'kafedra-template-and-structured-document-flow' "$ROOT/profiles/kafedra-planner/ROUTING.md" || fail "Kafedra routing lacks template flow route"
+grep -qi 'partial' "$ROOT/.agents/skills/kafedra-ux-acceptance/SKILL.md" || fail "Kafedra acceptance lacks partial-success evidence"
 
 sandbox="$(mktemp -d)"
 trap 'rm -rf "$sandbox"' EXIT
@@ -145,6 +148,8 @@ done
 grep -q 'ai-agents-skills:begin' "$HOME/.codex/AGENTS.md" || fail "Codex managed global block missing"
 grep -q 'ai-agents-skills:begin' "$HOME/.claude/CLAUDE.md" || fail "Claude managed global block missing"
 grep -q 'ai-agents-skills:begin' "$HOME/.gemini/GEMINI.md" || fail "Antigravity managed global block missing"
+grep -q 'kafedra-workspace-orchestrator' "$HOME/.codex/AGENTS.md" || fail "Codex global block lacks Kafedra route"
+grep -q 'document-workspace-designer' "$HOME/.claude/CLAUDE.md" || fail "Claude global block lacks document specialist route"
 
 # --plan is genuinely read-only.
 plan_project="$sandbox/plan-project"
