@@ -3,29 +3,37 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fail(){ echo "ERROR: $*" >&2; exit 1; }
+count_glob(){
+  local n=0 f
+  for f in "$@"; do [[ -f "$f" ]] && n=$((n + 1)); done
+  printf '%s\n' "$n"
+}
 
 bash -n "$ROOT/install.sh" "$ROOT/bin/ai-skills" "$ROOT/scripts/install-ui-skills.sh"
 "$ROOT/scripts/validate-skills.sh"
 
-codex_count="$(find "$ROOT/integrations/codex/agents" -maxdepth 1 -name '*.toml' -type f | wc -l | tr -d ' ')"
-claude_count="$(find "$ROOT/integrations/claude/agents" -maxdepth 1 -name '*.md' -type f | wc -l | tr -d ' ')"
-antigravity_count="$(find "$ROOT/integrations/antigravity/agents" -mindepth 2 -maxdepth 2 -name agent.md -type f | wc -l | tr -d ' ')"
+codex_count="$(count_glob "$ROOT"/integrations/codex/agents/*.toml)"
+claude_count="$(count_glob "$ROOT"/integrations/claude/agents/*.md)"
+antigravity_count="$(count_glob "$ROOT"/integrations/antigravity/agents/*/agent.md)"
 [[ "$codex_count" -eq 5 ]] || fail "expected 5 Codex agents, got $codex_count"
 [[ "$claude_count" -eq 5 ]] || fail "expected 5 Claude agents, got $claude_count"
 [[ "$antigravity_count" -eq 5 ]] || fail "expected 5 Antigravity agents, got $antigravity_count"
 
 for f in "$ROOT"/integrations/codex/agents/*.toml; do
+  [[ -f "$f" ]] || continue
   grep -q '^name[[:space:]]*=' "$f" || fail "$f missing name"
   grep -q '^description[[:space:]]*=' "$f" || fail "$f missing description"
   grep -q '^developer_instructions[[:space:]]*=' "$f" || fail "$f missing developer_instructions"
 done
 for f in "$ROOT"/integrations/claude/agents/*.md; do
+  [[ -f "$f" ]] || continue
   [[ "$(head -n1 "$f")" == '---' ]] || fail "$f missing YAML frontmatter"
   grep -q '^name:' "$f" || fail "$f missing name"
   grep -q '^description:' "$f" || fail "$f missing description"
   if grep -q '^skills:' "$f"; then fail "$f preloads skills; use progressive discovery instead"; fi
 done
 for f in "$ROOT"/integrations/antigravity/agents/*/agent.md; do
+  [[ -f "$f" ]] || continue
   [[ "$(head -n1 "$f")" == '---' ]] || fail "$f missing YAML frontmatter"
   grep -q '^name:' "$f" || fail "$f missing name"
   grep -q '^description:' "$f" || fail "$f missing description"
